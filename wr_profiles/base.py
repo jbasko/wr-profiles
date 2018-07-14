@@ -16,6 +16,11 @@ NotSet = _NotSet()
 
 
 class Property:
+    """
+    Represents a profile property -- a value backed by an environment variable.
+    The exact environment variable depends on what profile the property belongs to.
+    """
+
     def __init__(self, name, default: Any=NotSet, deserializer=None, serializer=None):
         self.name = name
         self.default = default
@@ -185,16 +190,25 @@ class Profile:
     def is_frozen(self):
         """
         A profile is frozen when its values are not loaded from environment variables after the initial load.
+        The opposite of frozen is live.
         """
         return self._frozen_name is not NotSet
+
+    @property
+    def is_live(self):
+        """
+        Returns true if the profile reads its property values from environment variables.
+        """
+        return not self.is_frozen
 
     @property
     def is_active(self):
         """
         Returns True if the current profile instance is pointing to the same profile as the active profile.
         Note that this is not the opposite of is_frozen. A profile can be frozen and active at the same time.
+        The opposite of is_frozen is is_live.
         """
-        if not self.is_frozen:
+        if self.is_live:
             return True
         return self.profile_name == self._active_profile.profile_name
 

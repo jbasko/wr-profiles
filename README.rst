@@ -7,6 +7,47 @@ wr-profiles
     pip install wr-profiles
 
 =======
+Example
+=======
+
+.. code-block:: python
+
+    # warehouse.py
+
+    from wr_profiles import Profile, Property
+
+    class _WarehouseProfile(Profile):
+        profile_root = 'warehouse'
+
+        host = Property('host', default='localhost')
+        user = Property('user')
+        password = Property('password', default='')
+
+        @property
+        def url(self):
+            return '{user}:{password}@{host}'.format(user=self.user, password=self.password, host=self.host)
+
+    warehouse_profile = _WarehouseProfile()
+
+    print(warehouse_profile.url)
+
+
+.. code-block:: bash
+
+    > export WAREHOUSE_SANDBOX_USER="sandbox-user"
+    > export WAREHOUSE_SANDBOX_PASSWORD="sandbox-password"
+    > export WAREHOUSE_PROD_USER="root"
+    > export WAREHOUSE_PROD_PASSWORD="bigSecret"
+    > export WAREHOUSE_PROFILE="sandbox"
+
+    > python warehouse.py
+    sandbox-user:sandbox-password@localhost
+
+    > WAREHOUSE_PROFILE="prod" python warehouse.py
+    root:bigSecret@localhost
+
+
+=======
 Profile
 =======
 

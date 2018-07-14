@@ -14,15 +14,6 @@ class WarehouseProfile(Profile):
 warehouse_profile = WarehouseProfile()
 
 
-@pytest.fixture(autouse=True)
-def reset_warehouse_profile(monkeypatch):
-    monkeypatch.delenv('WAREHOUSE_PROFILE', raising=False)
-
-    for k in list(os.environ):
-        if k.startswith('WAREHOUSE_'):
-            monkeypatch.delenv(k)
-
-
 def test_property_with_default_value(monkeypatch):
     monkeypatch.delenv('WAREHOUSE_PROFILE', raising=False)
 
@@ -215,6 +206,9 @@ def test_export(monkeypatch):
 
 
 def test_set_prop_value_on_frozen_profile(monkeypatch):
+    # Create a new instance because set_prop_value has long-lasting effect
+    warehouse_profile = WarehouseProfile()
+
     dummy = warehouse_profile.load_custom('dummy')
 
     with pytest.raises(KeyError) as exc_info:
@@ -234,6 +228,9 @@ def test_set_prop_value_on_frozen_profile(monkeypatch):
 
 
 def test_set_prop_value_on_non_frozen_profile(monkeypatch):
+    # Create a new instance because set_prop_value has long-lasting effect
+    warehouse_profile = WarehouseProfile()
+
     assert not warehouse_profile.is_frozen
 
     warehouse_profile.set_prop_value('host', 'test.localhost')
