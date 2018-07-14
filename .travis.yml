@@ -1,31 +1,26 @@
 sudo: false
-
 language: python
-
 matrix:
   include:
+  - python: 3.5
+    env: TOXENV=py
   - python: 3.6
     env: TOXENV=py
-
 install:
 - pip install tox
 - TOX_ENV=${TRAVIS_PYTHON_VERSION/[0-9].[0-9]/py${TRAVIS_PYTHON_VERSION/.}}
-
 script:
 - tox -e $TOX_ENV
-
 before_cache:
 - rm -rf $HOME/.cache/pip/log
-
 cache:
   directories:
-  - $HOME/.cache/pip
-
+  - "$HOME/.cache/pip"
 deploy:
   - provider: pypi
     user: jbasko
     password:
-      secure: PLEASE_CONFIGURE_ME
+      secure: lvx49q+Rwf9QXXPpQh7p2aNsK6jESV9kacXY143e+T68tH2JbO36oHnD1u7JICLnfBK5BIWjfXLCuUZHg5sJ0WVYpK/ty84gUyTmO9QMlts0N4c1T6wvhEsQ+tC6xfkHNxbABrahR4jQeWkD+XA4za3Zfn5PTk2pe3e3xLu1ivdf23zD8fGXncjB21BtLfpjw6rMejt2EFzoDS4ZZZ77FyCIByuQO7GM99L9jmk21Ykzt1lYKNfsxn9IjEqfFQorJqNzDOmPkhJ0x9+eAxD51Ca/tRFsYNN0NlEnzryaDcVYkLKEjBFczkSWwOYDHyRWLFRUHLS6n2/tJR5QHmXBRUPxXtAz8FUVsrE1499uugW5BZQmw5XSCtMfkE3P6XvxYPnMLrPkMBGe/mwdh8+7piS11pzLxfClcmr3pxtRqhph7V7h8VBwIL4WS9TerGpFUKudmsjbF1MRsU6mdiWILZHAD28A1pk8fEKO0lCrR59gnK75Op+QYWkYBt9ZFmudyvso2Ym/oL9BDSzGVNeQsE53ITXyZyQr9TN6jFZZtFi4hkMwOnJEbGgeKKa/KJPgNtsaVaf5q95qtAjaUX+nwOhKKMe5ug1/TRxPC8KzAjocIbhOrMXzggg5Te9vW8YnySOaz1yy6cYfuMXKPrDybM2QCTiMIkkZacQquE6J+B0=
     on:
       tags: true
       branch: master
