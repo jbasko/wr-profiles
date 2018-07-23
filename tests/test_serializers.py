@@ -15,6 +15,8 @@ class UploaderProfile(Profile):
 
     @enabled.deserializer
     def enabled(self, value):
+        if isinstance(value, bool):
+            return value
         return value and value[0].lower()[0] in ('y', 't', '1')
 
     @enabled.serializer
@@ -33,14 +35,14 @@ def test_all(monkeypatch):
 
     assert uploader_profile.root_dir == Path('/')
 
-    with pytest.raises(KeyError):
+    with pytest.raises(Property.MissingValue):
         assert not uploader_profile.user
 
     monkeypatch.setenv('UPLOADER_USER', 'uploader')
     assert uploader_profile.user == 'uploader'
 
     assert uploader_profile.enabled is False
-    assert uploader_profile.export() == {
+    assert uploader_profile.to_envvars() == {
         'UPLOADER_USER': 'uploader',
         'UPLOADER_ROOT_DIR': '/',
         'UPLOADER_ENABLED': '0',
@@ -48,8 +50,8 @@ def test_all(monkeypatch):
 
     monkeypatch.setenv('UPLOADER_ENABLED', 'yes')
     assert uploader_profile.enabled is True
-    assert uploader_profile.export() == {
+    assert uploader_profile.to_envvars() == {
         'UPLOADER_USER': 'uploader',
         'UPLOADER_ROOT_DIR': '/',
-        'UPLOADER_ENABLED': 'y',
+        'UPLOADER_ENABLED': 't',
     }

@@ -4,7 +4,10 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def reset_warehouse_profile(monkeypatch):
+def reset_warehouse_profile_envvars(monkeypatch):
+    """
+    Reset any environment variables that could affect the WarehouseProfile used in tests.
+    """
     for k in list(os.environ):
         if k.startswith('WAREHOUSE_'):
             del os.environ[k]
