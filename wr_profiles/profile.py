@@ -1,7 +1,7 @@
 import os
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Union  # noqa
+from typing import Any, Dict, Union
 
 from .not_set import NotSet
 from .props import AttributesList, Property
@@ -26,11 +26,11 @@ class ProfileLoader(ABC):
     def set_prop_value(self, profile: 'Profile', prop: Union[str, Property], value: Any):
         pass
 
-    def to_dict(self, profile: 'Profile'):
+    def to_dict(self, profile: 'Profile') -> Dict[Property, Any]:
         values = {}
         for prop in profile.props:
             try:
-                values[prop.name] = profile.get_prop_value(prop)
+                values[prop] = profile.get_prop_value(prop)
             except Property.MissingValue:
                 pass
         return values
@@ -40,7 +40,7 @@ class LiveProfileLoader(ProfileLoader):
     def set_prop_value(self, profile: 'Profile', prop: Union[str, Property], value: Any):
         if isinstance(prop, str):
             prop = profile.get_prop(prop)
-        os.environ[prop.get_envvar(profile)] = value
+        os.environ[prop.get_envvar(profile)] = prop.to_str(profile, value)
 
     def get_prop_value(self, profile: 'Profile', prop: Union[str, Property], default: Any = NotSet) -> Any:
         if isinstance(prop, str):
@@ -92,7 +92,12 @@ class FrozenProfileLoader(ProfileLoader):
 
     def load(self, profile):
         # Create a live clone of itself and load all props.
-        live_clone = profile.__class__(name=profile.profile_name, parent_name=profile.parent_profile_name, is_live=True)
+        live_clone = profile.__class__(
+            name=profile.profile_name,
+            parent_name=profile.parent_profile_name,
+            is_live=True,
+            values=profile._const_values,
+        )
 
         values = {}
         for prop in profile.props:
@@ -116,12 +121,14 @@ class Profile:
     # shared loaders
     _profile_loaders = {}  # type: Dict[str, ProfileLoader]
 
-    def __init__(self, *, name=None, parent_name=None, is_live=True, **kwargs):
+    def __init__(self, *, name=None, parent_name=None, is_live=True, values=None, **kwargs):
         self._const_name = name
         self._const_parent_name = parent_name
         self._const_is_live = is_live
 
         self._const_values = {}
+        if values is not None:
+            self._const_values.update(values)
 
         if kwargs:
             raise ValueError(kwargs)
@@ -133,11 +140,11 @@ class Profile:
             raise ValueError('{}.profile_root {!r} is invalid'.format(self.__class__.__name__, self.profile_root))
 
     @classmethod
-    def get_instance(cls, name=None, parent_name=None, is_live=False):
+    def get_instance(cls, name=None, parent_name=None, is_live=False, values=None):
         """
         Get a loaded frozen instance of a specific profile.
         """
-        instance = cls(name=name, parent_name=parent_name, is_live=is_live)
+        instance = cls(name=name, parent_name=parent_name, is_live=is_live, values=values)
         instance.load()
         return instance
 
@@ -169,7 +176,13 @@ class Profile:
 
     @property
     def active_profile_name(self):
-        return os.environ.get('{}_PROFILE'.format(self.profile_root).upper(), None)
+        return os.environ.get('{}_PROFILE'.format(self.profile_root).upper(), None) or None
+
+    @active_profile_name.setter
+    def active_profile_name(self, value):
+        if value is None:
+            value = ''
+        os.environ['{}_PROFILE'.format(self.profile_root).upper()] = value
 
     @property
     def is_live(self):
@@ -220,7 +233,7 @@ class Profile:
     def load(self):
         self.loader.load(self)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[Property, Any]:
         return self.loader.to_dict(self)
 
     def to_envvars(self):
@@ -228,7 +241,14 @@ class Profile:
         Export property values to a dictionary with environment variable names as keys.
         """
         export = {}
-        for prop_name, prop_value in self.to_dict().items():
-            prop = self.get_prop(prop_name)
+        for prop, prop_value in self.to_dict().items():
             export[prop.get_envvar(self)] = prop.to_str(self, prop_value)
+        if self.parent_profile_name:
+            export['{}PARENT_PROFILE'.format(self.envvar_prefix).upper()] = self.parent_profile_name
         return export
+
+    def activate(self):
+        """
+        Sets <PROFILE_ROOT>_PROFILE environment variable to the name of the current profile.
+        """
+        self.active_profile_name = self.profile_name

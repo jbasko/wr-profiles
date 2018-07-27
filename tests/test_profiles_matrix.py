@@ -107,5 +107,5 @@ def test_loaders():
 
 
 def test_to_dict():
-    assert WP().to_dict() == {'host': 'localhost'}
-    assert WP(is_live=False).to_dict() == {'host': 'localhost'}
+    assert WP().to_dict() == {WP.host: 'localhost'}
+    assert WP(is_live=False).to_dict() == {WP.host: 'localhost'}

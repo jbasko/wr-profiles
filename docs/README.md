@@ -1,6 +1,37 @@
-**TODO** Already out of date!
+## Installation
 
-## Profile
+    pip install wr-profiles
+
+## Example
+
+This example works in Python 3.6+.
+
+In Python 3.5 you need to pass the name of the property to the `Property` initialiser:
+`password = Password('password')`.
+
+
+    import os
+    from wr_profiles import Profile, Property
+    
+    class WarehouseProfile(Profile):
+        profile_root = 'warehouse'
+        username = Property(default='default-username')
+        password = Property()
+    
+    # export WAREHOUSE_PROFILE=staging
+    # export WAREHOUSE_STAGING_PARENT_PROFILE="production"
+    # export WAREHOUSE_STAGING_PASSWORD="staging-password"
+    # export WAREHOUSE_PRODUCTION_USERNAME="production-username"
+    # export WAREHOUSE_PRODUCTION_PASSWORD="production-password"
+    
+    warehouse_profile = WarehouseProfile()
+    assert warehouse_profile.username == 'production-username'
+    assert warehouse_profile.password == 'staging-password'
+
+
+## User Guide
+
+### Profile
 
 A **profile** represents a set of configurable **properties** of a single service
 backed by environment variables.
@@ -76,49 +107,6 @@ profile won't have any parent profile. It is the same as having no value set.
 
 ##### Live Profile vs Frozen Profile
 
-A **live** profile always consults environment variables (`os.environ`).
-A **frozen** profile provides values based on profile defaults and values previously loaded (`_frozen_values`).
-A frozen profile consults environment variables only when `load()` method is called.
-
-##### Property Value Resolution Order (for Live Profile)
-
-**TODO** Update
-
-If `WAREHOUSE_PROFILE` was set to `staging` and `WAREHOUSE_STAGING_PARENT_PROFILE` was set to
-`production`, value of `warehouse_profile.host` would be looked up from multiple sources.
-The first discovered value would be returned and sub-sequent sources would not be consulted.
-
- 1. `os.environ['WAREHOUSE_STAGING_HOST']`
- 2. `os.environ['WAREHOUSE_PRODUCTION_HOST']`
- 3. `warehouse_profile.defaults['host']` (instance-associated defaults)
- 4. `WarehouseProfile.host.default`
-
-If no value was to be found (note that `Property.default` is not necessarily set),
-a `KeyError('host')` would be raised.
-
-##### Property Value Resolution Order (for Frozen Profile)
-
-**TODO** Update
-
- 1. `warehouse_profile._const_values['host']`
- 1. `warehouse_profile._frozen_inherited_values['host']`
- 2. `warehouse_profile.defaults['host']`
- 3. `WarehouseProfile.host.default`
-
-If no value is found, `KeyError('host')` is raised.
-
-### API
-
-##### `Profile().to_dict()`
-
-Generates a dictionary of property values that would represent the current
-state of the profile.
-
-##### `Profile().to_envvars()`
-
-Generates a dictionary of environment variables that would represent the
-current state of the profile.
-
-Note that there are many ways to represent the same state due to profile inheritance.
-This returns the most straight-forward (not necessarily the most efficient in terms of
-number of environment variables used) specification.
+A **live** profile always consults environment variables (`os.environ`) whereas
+a **frozen** profile does so only during instantiation and when explicitly loaded
+with `load()` method.

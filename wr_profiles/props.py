@@ -36,10 +36,7 @@ class Property:
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        if self._deserializer is None:
-            return instance.get_prop_value(self)
-        else:
-            return self.from_str(instance, instance.get_prop_value(self))
+        return instance.get_prop_value(self)
 
     def __set__(self, instance, value):
         instance.set_prop_value(self, value)

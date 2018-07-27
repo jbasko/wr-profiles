@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.warehouse_profile import WarehouseProfile
 from wr_profiles import Profile, Property
 
 
@@ -54,4 +55,29 @@ def test_all(monkeypatch):
         'UPLOADER_USER': 'uploader',
         'UPLOADER_ROOT_DIR': '/',
         'UPLOADER_ENABLED': 't',
+    }
+
+
+def test_integers_are_converted_to_strings():
+    staging = WarehouseProfile(name='staging')
+    staging.username = 5555
+    assert staging.to_envvars() == {
+        'WAREHOUSE_STAGING_HOST': 'localhost',
+        'WAREHOUSE_STAGING_USERNAME': '5555',
+    }
+
+
+@pytest.mark.parametrize('is_live', [
+    True,
+    False,
+])
+def test_to_envvars_includes_parent_profile_setting(is_live):
+    staging = WarehouseProfile(name='staging', parent_name='production', is_live=is_live, values={
+        'username': 'hard-coded-staging-username',
+    })
+
+    assert staging.to_envvars() == {
+        'WAREHOUSE_STAGING_PARENT_PROFILE': 'production',
+        'WAREHOUSE_STAGING_HOST': 'localhost',
+        'WAREHOUSE_STAGING_USERNAME': 'hard-coded-staging-username',
     }
