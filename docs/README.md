@@ -162,4 +162,3 @@ or, `activate(profile_name)` on the live current profile instance:
     # or:
     
     warehouse_profile.activate('staging')
-

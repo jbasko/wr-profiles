@@ -13,4 +13,3 @@ flake8
 isort
 pytest
 pytest-random-order
-tox
