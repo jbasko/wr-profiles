@@ -1,13 +1,24 @@
-## Installation
+## Disclaimer
 
-    pip install wr-profiles
+*wr-* in the package name stands for *Wheel Reinvented*. Just like all other packages whose name starts with
+*wr-*, the meaning of this library (as in *meaning of life*) lies in its existence and evolution 
+and not in any external application of it.
+
+## Why Do I Need This?
+
+You don't.
+
+But you could find it useful if you use environment variables as primary means of passing 
+configuration to your program, and you have scenarios when your program has to switch between sets of 
+environment variables.
 
 ## Example
 
-This example works in Python 3.6+.
+Here's an example of declaring a profile with three properties and using it to consult the values
+of these properties. More advanced examples are available in the user guide below.
 
-In Python 3.5 you need to pass the name of the property to the `Property` initialiser:
-`password = Password('password')`.
+This example works in Python 3.6+. In Python 3.5 you need to pass the name of the property 
+to the `Property` initialiser: `password = Password('password')`.
 
 
     import os
@@ -28,10 +39,17 @@ In Python 3.5 you need to pass the name of the property to the `Property` initia
     assert warehouse_profile.username == 'production-username'
     assert warehouse_profile.password == 'staging-password'
 
+## Installation
+
+    pip install wr-profiles
+    
+If you decide to use this library, make sure you pin the version number in your requirements file.
 
 ## User Guide
 
-### Profile
+### Concepts
+
+##### Profile
 
 A **profile** represents a set of configurable **properties** of a single service
 backed by environment variables.
@@ -110,3 +128,38 @@ profile won't have any parent profile. It is the same as having no value set.
 A **live** profile always consults environment variables (`os.environ`) whereas
 a **frozen** profile does so only during instantiation and when explicitly loaded
 with `load()` method.
+
+### Scenarios
+
+##### Current Active Profile
+
+Current active profile is always available through the instance of your profile class which is
+instantiated with no arguments:
+
+    warehouse_profile = WarehouseProfile()
+
+Normally you'd only need a single instance of your profile class.
+
+##### Concrete Profile
+
+To work with a concrete profile which may not necessarily be activated, use `get_instance`
+factory method:
+
+    staging = WarehouseProfile.get_instance('staging')
+
+By default, this profile will be frozen which means it will be loaded only once during instantiation.
+If you want it to always consult environment variables, pass `is_live=True`:
+
+    staging = WarehouseProfile.get_instance('staging', is_live=True)
+
+##### Activate Profile
+
+To activate a profile, call `activate` method on a frozen instance of the profile without any arguments,
+or, `activate(profile_name)` on the live current profile instance:
+
+    staging.activate()
+    
+    # or:
+    
+    warehouse_profile.activate('staging')
+

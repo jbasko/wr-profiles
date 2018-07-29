@@ -247,8 +247,10 @@ class Profile:
             export['{}PARENT_PROFILE'.format(self.envvar_prefix).upper()] = self.parent_profile_name
         return export
 
-    def activate(self):
+    def activate(self, profile_name=NotSet):
         """
         Sets <PROFILE_ROOT>_PROFILE environment variable to the name of the current profile.
         """
-        self.active_profile_name = self.profile_name
+        if profile_name is NotSet:
+            profile_name = self.profile_name
+        self.active_profile_name = profile_name

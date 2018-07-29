@@ -29,3 +29,16 @@ def test_activates_frozen_profile(profile_name):
 
     assert instance.is_active
     assert wp.active_profile_name == profile_name
+
+
+def test_activates_named_profile():
+    wp = WarehouseProfile()
+
+    wp.activate('staging')
+    assert wp.active_profile_name == 'staging'
+
+    wp.activate('production')
+    assert wp.active_profile_name == 'production'
+
+    wp.activate(None)
+    assert wp.active_profile_name is None
