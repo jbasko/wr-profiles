@@ -20,3 +20,28 @@ def test_const_values_set_on_frozen_profile_instance(profile_name, monkeypatch):
         WarehouseProfile.host: 'localhost.test',
         WarehouseProfile.username: 'test',
     }
+
+
+def test_frozen_profile_with_defaults(monkeypatch):
+    wp = WarehouseProfile.get_instance(name='staging', defaults={
+        'host': 'default-host',
+        'username': 'default-username',
+    })
+
+    assert wp._const_defaults == {
+        'host': 'default-host',
+        'username': 'default-username',
+    }
+
+    assert wp._const_values == {}
+
+    assert wp.host == 'default-host'
+    assert wp.username == 'default-username'
+
+    monkeypatch.setenv('WAREHOUSE_STAGING_HOST', 'custom-host')
+    assert wp.host == 'default-host'
+    assert wp.username == 'default-username'
+
+    wp.load()
+    assert wp.host == 'custom-host'
+    assert wp.username == 'default-username'

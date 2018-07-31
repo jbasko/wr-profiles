@@ -19,6 +19,10 @@ class ProfileLoader(ABC):
         pass
 
     @abstractmethod
+    def has_prop_value(self, profile: 'Profile', prop: Union[str, Property]) -> bool:
+        pass
+
+    @abstractmethod
     def get_prop_value(self, profile: 'Profile', prop: Union[str, Property], default: Any=NotSet) -> Any:
         pass
 
@@ -42,6 +46,16 @@ class LiveProfileLoader(ProfileLoader):
             prop = profile.get_prop(prop)
         os.environ[prop.get_envvar(profile)] = prop.to_str(profile, value)
 
+    def has_prop_value(self, profile: 'Profile', prop: Union[str, Property]) -> bool:
+        for check_profile in profile.get_profile_tree():
+            if prop.name in check_profile._const_values:
+                return True
+            prop_envvar = prop.get_envvar(check_profile)
+            if prop_envvar in os.environ:
+                return True
+
+        return False
+
     def get_prop_value(self, profile: 'Profile', prop: Union[str, Property], default: Any = NotSet) -> Any:
         if isinstance(prop, str):
             prop = profile.get_prop(prop)
@@ -54,6 +68,10 @@ class LiveProfileLoader(ProfileLoader):
             prop_envvar = prop.get_envvar(check_profile)
             if prop_envvar in os.environ:
                 return prop.from_str(check_profile, os.environ[prop_envvar])
+
+        for check_profile in profile.get_profile_tree():
+            if prop.name in check_profile._const_defaults:
+                return check_profile._const_defaults[prop.name]
 
         if default is not NotSet:
             return default
@@ -74,6 +92,13 @@ class FrozenProfileLoader(ProfileLoader):
             prop = profile.get_prop(prop)
         profile._const_values[prop.name] = value
 
+    def has_prop_value(self, profile: 'Profile', prop: Union[str, Property]) -> bool:
+        for check_profile in profile.get_profile_tree():
+            if prop.name in check_profile._const_values:
+                return True
+
+        return False
+
     def get_prop_value(self, profile: 'Profile', prop: Union[str, Property], default: Any = NotSet) -> Any:
         if isinstance(prop, str):
             prop = profile.get_prop(prop)
@@ -81,6 +106,10 @@ class FrozenProfileLoader(ProfileLoader):
         for check_profile in profile.get_profile_tree():
             if prop.name in check_profile._const_values:
                 return check_profile._const_values[prop.name]
+
+        for check_profile in profile.get_profile_tree():
+            if prop.name in check_profile._const_defaults:
+                return check_profile._const_defaults[prop.name]
 
         if default is not NotSet:
             return default
@@ -101,10 +130,8 @@ class FrozenProfileLoader(ProfileLoader):
 
         values = {}
         for prop in profile.props:
-            try:
-                values[prop.name] = live_clone.get_prop_value(prop.name)
-            except Property.MissingValue:
-                continue
+            if live_clone.has_prop_value(prop):
+                values[prop.name] = live_clone.get_prop_value(prop)
 
         profile._const_values = values
 
@@ -121,7 +148,7 @@ class Profile:
     # shared loaders
     _profile_loaders = {}  # type: Dict[str, ProfileLoader]
 
-    def __init__(self, *, name=None, parent_name=None, is_live=True, values=None, **kwargs):
+    def __init__(self, *, name=None, parent_name=None, is_live=True, values=None, defaults=None, **kwargs):
         self._const_name = name
         self._const_parent_name = parent_name
         self._const_is_live = is_live
@@ -129,6 +156,10 @@ class Profile:
         self._const_values = {}
         if values is not None:
             self._const_values.update(values)
+
+        self._const_defaults = {}
+        if defaults is not None:
+            self._const_defaults.update(defaults)
 
         if kwargs:
             raise ValueError(kwargs)
@@ -140,11 +171,11 @@ class Profile:
             raise ValueError('{}.profile_root {!r} is invalid'.format(self.__class__.__name__, self.profile_root))
 
     @classmethod
-    def get_instance(cls, name=None, parent_name=None, is_live=False, values=None):
+    def get_instance(cls, name=None, parent_name=None, is_live=False, values=None, defaults=None):
         """
         Get a loaded frozen instance of a specific profile.
         """
-        instance = cls(name=name, parent_name=parent_name, is_live=is_live, values=values)
+        instance = cls(name=name, parent_name=parent_name, is_live=is_live, values=values, defaults=defaults)
         instance.load()
         return instance
 
@@ -223,6 +254,14 @@ class Profile:
             if 'frozen' not in self._profile_loaders:
                 self._profile_loaders['frozen'] = FrozenProfileLoader()
             return self._profile_loaders['frozen']
+
+    def has_prop_value(self, prop: Union[str, Property]) -> bool:
+        """
+        Returns True if the property has a concrete value set either via environment
+        variables or on the froze profile instance.
+        If a property only has a default value set, this returns False.
+        """
+        return self.loader.has_prop_value(self, prop)
 
     def get_prop_value(self, prop: Union[str, Property], default=NotSet):
         return self.loader.get_prop_value(self, prop, default=default)
