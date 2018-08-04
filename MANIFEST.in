@@ -1,0 +1,6 @@
+include LICENSE
+include docs/README.rst
+
+graft tests
+
+global-exclude *.py[co]
