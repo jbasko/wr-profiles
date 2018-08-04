@@ -1,6 +1,0 @@
-include LICENSE
-include docs/README.md
-
-graft tests
-
-global-exclude *.py[co]
