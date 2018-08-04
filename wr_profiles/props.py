@@ -13,13 +13,16 @@ class Property:
         """
         Raised when the value is requested for an existing property
         """
+
         def __init__(self, prop):
             self.prop = prop
 
         def __repr__(self):
-            return '<{} {!r}>'.format(self.__class__.__name__, self.prop.name)
+            return "<{} {!r}>".format(self.__class__.__name__, self.prop.name)
 
-    def __init__(self, name=None, default: Any=NotSet, deserializer=None, serializer=None):
+    def __init__(
+        self, name=None, default: Any = NotSet, deserializer=None, serializer=None
+    ):
         self.name = name
         self.default = default
         self._deserializer = deserializer
@@ -42,14 +45,14 @@ class Property:
         instance.set_prop_value(self, value)
 
     def __str__(self):
-        return '{}({!r})'.format(self.__class__.__name__, self.name)
+        return "{}({!r})".format(self.__class__.__name__, self.name)
 
     def __repr__(self):
-        return '{}({!r})'.format(self.__class__.__name__, self.name)
+        return "{}({!r})".format(self.__class__.__name__, self.name)
 
     def get_envvar(self, profile):
         assert self.name
-        return '{}{}'.format(profile.envvar_prefix, self.name.upper())
+        return "{}{}".format(profile.envvar_prefix, self.name.upper())
 
     @property
     def has_default(self):
@@ -65,10 +68,12 @@ class Property:
         The function name must be either `<lambda>` or `{prop_name}`
         """
         if callable(func):
-            if not (func.__name__ == '<lambda>' or func.__name__ == self.name):
-                raise RuntimeError('Invalid {!r} property serializer name {!r} -- should be called {!r}'.format(
-                    self.name, func.__name__, self.name
-                ))
+            if not (func.__name__ == "<lambda>" or func.__name__ == self.name):
+                raise RuntimeError(
+                    "Invalid {!r} property serializer name {!r} -- should be called {!r}".format(
+                        self.name, func.__name__, self.name
+                    )
+                )
         else:
             assert func is None
         self._serializer = func
@@ -80,10 +85,12 @@ class Property:
         The function name must be either `<lambda>` or `{prop_name}`.
         """
         if callable(func):
-            if not (func.__name__ == '<lambda>' or func.__name__ == self.name):
-                raise RuntimeError('Invalid {!r} property deserializer name {!r} -- should be called {!r}'.format(
-                    self.name, func.__name__, self.name
-                ))
+            if not (func.__name__ == "<lambda>" or func.__name__ == self.name):
+                raise RuntimeError(
+                    "Invalid {!r} property deserializer name {!r} -- should be called {!r}".format(
+                        self.name, func.__name__, self.name
+                    )
+                )
         else:
             assert func is None
         self._deserializer = func
@@ -114,7 +121,7 @@ class AttributesList:
             return self
 
         for name in dir(owner):
-            if name.startswith('__'):
+            if name.startswith("__"):
                 continue
             attr = getattr(owner, name)
             if isinstance(attr, self._attr_base_cls):
