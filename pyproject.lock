@@ -152,6 +152,15 @@ version = "1.6.0"
 
 [[package]]
 category = "dev"
+description = "Pygments is a syntax highlighting package written in Python."
+name = "pygments"
+optional = false
+platform = "any"
+python-versions = "*"
+version = "2.2.0"
+
+[[package]]
+category = "dev"
 description = "pytest: simple powerful testing with Python"
 name = "pytest"
 optional = false
@@ -203,9 +212,9 @@ python-versions = "*"
 version = "0.9.4"
 
 [metadata]
-content-hash = "15a9d5825fe2fc60c28fcc619074e10b209943636e921eba2d97cd2be16722a8"
+content-hash = "901d46e994abc66240d67751b9200381256671db7df286cfa64a19a1aa6ce1e8"
 platform = "*"
-python-versions = "3.6.6"
+python-versions = "^3.6.1"
 
 [metadata.hashes]
 appdirs = ["9e5896d1372858f8dd3344faf4e5014d21849c756c8d5701f78f8a103b372d92", "d8b24664561d0d34ddfaec54636d502d7cea6e29c3eaf68f3df6180863e2166e"]
@@ -223,6 +232,7 @@ pluggy = ["6e3836e39f4d36ae72840833db137f7b7d35105079aee6ec4a62d9f80d594dd1", "9
 py = ["3fd59af7435864e1a243790d322d763925431213b6b8529c6ca71081ace3bbf7", "e31fb2767eb657cbde86c454f02e99cb846d3cd9d61b318525140214fdc0e98e"]
 pycodestyle = ["682256a5b318149ca0d2a9185d365d8864a768a28db66a84a2ea946bcc426766", "6c4245ade1edfad79c3446fadfc96b0de2759662dc29d07d80a6f27ad1ca6ba9"]
 pyflakes = ["08bd6a50edf8cffa9fa09a463063c425ecaaf10d1eb0335a7e8b1401aef89e6f", "8d616a382f243dbf19b54743f280b80198be0bca3a5396f1d2e1fca6223e8805"]
+pygments = ["78f3f434bcc5d6ee09020f92ba487f95ba50f1e3ef83ae96b9d5ffa1bab25c5d", "dbae1046def0efb574852fab9e90209b23f556367b5a320c0bcb871c77c3e8cc"]
 pytest = ["86a8dbf407e437351cef4dba46736e9c5a6e3c3ac71b2e942209748e76ff2086", "e74466e97ac14582a8188ff4c53e6cc3810315f342f6096899332ae864c1d432"]
 pytest-random-order = ["8362a582cd4f95a9b7e0e751f824f6a70e14375d10b6486d7001bbea526a1ab5"]
 six = ["70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9", "832dc0e10feb1aa2c68dcc57dbb658f1c7e65b9b61af69048abc87a2db00a0eb"]
