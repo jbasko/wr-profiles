@@ -14,7 +14,7 @@ def read(fname):
 
 setup(
     name='wr-profiles',
-    version=read('wr_profiles/__init__.py').split('\n')[0].split('=', 1)[1].strip().strip("'"),
+    version=read('wr_profiles/__init__.py').split('\n')[0].split('=', 1)[1].strip().strip('"'),
     author='Jazeps Basko',
     author_email='jazeps.basko@gmail.com',
     maintainer='Jazeps Basko',
