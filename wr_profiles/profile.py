@@ -187,14 +187,12 @@ class Profile:
 
         if not self.profile_root:
             raise ValueError(
-                "{}.profile_root is required".format(self.__class__.__name__)
+                f"{self.__class__.__name__}.profile_root is required"
             )
 
         if not PROFILE_NAME_COMPONENT_REGEX.match(self.profile_root):
             raise ValueError(
-                "{}.profile_root {!r} is invalid".format(
-                    self.__class__.__name__, self.profile_root
-                )
+                f"{self.__class__.__name__}.profile_root {self.profile_root!r} is invalid"
             )
 
     @classmethod
@@ -217,8 +215,8 @@ class Profile:
     @property
     def envvar_prefix(self):
         if self.profile_name:
-            return "{}_{}_".format(self.profile_root, self.profile_name).upper()
-        return "{}_".format(self.profile_root).upper()
+            return f"{self.profile_root}_{self.profile_name}_".upper()
+        return f"{self.profile_root}_".upper()
 
     @property
     def parent_profile_name(self):
@@ -227,7 +225,7 @@ class Profile:
         elif not self.is_live:
             return None
         elif self.profile_name:
-            return os.environ.get("{}PARENT_PROFILE".format(self.envvar_prefix), None)
+            return os.environ.get(f"{self.envvar_prefix}PARENT_PROFILE", None)
         else:
             return None
 
@@ -243,14 +241,14 @@ class Profile:
     @property
     def active_profile_name(self):
         return (
-            os.environ.get("{}_PROFILE".format(self.profile_root).upper(), None) or None
+            os.environ.get(f"{self.profile_root}_PROFILE".upper(), None) or None
         )
 
     @active_profile_name.setter
     def active_profile_name(self, value):
         if value is None:
             value = ""
-        os.environ["{}_PROFILE".format(self.profile_root).upper()] = value
+        os.environ[f"{self.profile_root}_PROFILE".upper()] = value
 
     @property
     def is_live(self):
@@ -323,7 +321,7 @@ class Profile:
             export[prop.get_envvar(self)] = prop.to_str(self, prop_value)
         if self.parent_profile_name:
             export[
-                "{}PARENT_PROFILE".format(self.envvar_prefix).upper()
+                f"{self.envvar_prefix}PARENT_PROFILE".upper()
             ] = self.parent_profile_name
         return export
 

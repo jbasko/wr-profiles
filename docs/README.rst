@@ -37,8 +37,8 @@ of these properties. More advanced examples are available in the user guide belo
     from wr_profiles import Profile, Property
 
     class WarehouseProfile(Profile):
-        profile_root = 'warehouse'
-        username = Property(default='default-username')
+        profile_root = "warehouse"
+        username = Property(default="default-username")
         password = Property()
 
     warehouse_profile = WarehouseProfile()
@@ -59,8 +59,8 @@ of these properties. More advanced examples are available in the user guide belo
 
     from profiles import warehouse_profile
 
-    assert warehouse_profile.username == 'production-username'
-    assert warehouse_profile.password == 'staging-password'
+    assert warehouse_profile.username == "production-username"
+    assert warehouse_profile.password == "staging-password"
 
 
 
@@ -107,11 +107,11 @@ active configuration.
 .. code-block:: python
 
     class WarehouseProfile(Profile):
-        profile_root = 'warehouse'
+        profile_root = "warehouse"
         
-        host = Property(default='localhost')
+        host = Property(default="localhost")
         username = Property()
-        password = Property(default='')
+        password = Property(default="")
     
     warehouse_profile = WarehouseProfile()
 
@@ -146,7 +146,7 @@ If ``<PROFILE_ROOT>_PROFILE`` is set then the active profile consults environmen
 
     <PROFILE_ROOT>_<PROFILE_NAME>_<PROPERTY_NAME>
 
-For example, if ``WAREHOUSE_PROFILE` is set to ``staging`` then ``host`` property will be looked up
+For example, if ``WAREHOUSE_PROFILE`` is set to ``staging`` then ``host`` property will be looked up
 under ``WAREHOUSE_STAGING_HOST``.
 
 
@@ -167,7 +167,7 @@ the default value of the property (if available) would be used.
 
 *Limitation*: The default profile (``profile_name=""``) cannot be used as a parent profile.
 If you specify empty string as ``<PROFILE_ROOT>_<PROFILE_NAME>_PARENT_PROFILE`` then this
-profile won't have any parent profile. It is the same as having no value set. 
+profile won"t have any parent profile. It is the same as having no value set. 
 
 
 Live Profile vs Frozen Profile
@@ -191,7 +191,7 @@ instantiated with no arguments:
 
     warehouse_profile = WarehouseProfile()
 
-Normally you'd only need a single instance of your profile class.
+Normally you"d only need a single instance of your profile class.
 
 
 Get Concrete Profile
@@ -202,14 +202,14 @@ factory method:
 
 .. code-block:: python
 
-    staging = WarehouseProfile.get_instance('staging')
+    staging = WarehouseProfile.get_instance("staging")
 
 By default, this profile will be frozen which means it will be loaded only once during instantiation.
 If you want it to always consult environment variables, pass ``is_live=True``:
 
 .. code-block:: python
 
-    staging = WarehouseProfile.get_instance('staging', is_live=True)
+    staging = WarehouseProfile.get_instance("staging", is_live=True)
 
 
 Activate Profile
@@ -222,7 +222,7 @@ or, ``activate(profile_name)`` on the live current profile instance:
 
     staging.activate()
     # or:
-    warehouse_profile.activate('staging')
+    warehouse_profile.activate("staging")
 
 
 Get All Values
@@ -250,7 +250,7 @@ Check If Property Has Non-Default Value
 
 .. code-block:: python
 
-    warehouse_profile.has_prop_value('username')
+    warehouse_profile.has_prop_value("username")
     # or
     warehouse_profile.has_prop_value(WarehouseProfile.username)
 
@@ -261,6 +261,6 @@ Inspect Property
 .. code-block:: python
 
     assert isinstance(WarehouseProfile.username, Property)
-    assert WarehouseProfile.username.name == 'username'
+    assert WarehouseProfile.username.name == "username"
     assert WarehouseProfile.username.has_default
-    assert WarehouseProfile.username.default == 'default-username'
+    assert WarehouseProfile.username.default == "default-username"
