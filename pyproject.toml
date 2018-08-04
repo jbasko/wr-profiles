@@ -10,18 +10,16 @@ keywords = ['environment-variables', 'configuration', 'environment', 'profile']
 readme = 'docs/README.md'
 
 [tool.poetry.dependencies]
-python = "3.6.6"
+python = "^3.6.1"
 
 [tool.poetry.dev-dependencies]
 pytest-random-order = "^0.8.0"
 pytest = "^3.7"
-bumpversion = "0.5.3"
 coverage = "^4.5"
 flake8 = "^3.5"
 isort = "^4.3"
+black = "^18.3-alpha.0"
 
 [tool.black]
 line-length = 88
 py36 = true
-
-
