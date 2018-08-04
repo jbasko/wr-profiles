@@ -22,7 +22,7 @@ setup(
     license='MIT',
     url='https://github.com/jbasko/wr-profiles',
     description='Switch environment variable based profiles in Python with ease',
-    long_description=read('docs/README.md'),
+    long_description=read('docs/README.rst'),
     packages=['wr_profiles'],
     install_requires=[],
     classifiers=[
