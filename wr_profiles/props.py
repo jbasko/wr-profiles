@@ -32,8 +32,6 @@ class Property:
         return hash((self.__class__, self.name))
 
     def __set_name__(self, owner, name):
-        # Only works in Python 3.6+
-        # On Python 3.5 you need to manually pass the name.
         self.name = name
 
     def __get__(self, instance, owner):

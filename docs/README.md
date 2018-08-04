@@ -12,14 +12,14 @@ But you could find it useful if you use environment variables as primary means o
 configuration to your program, and you have scenarios when your program has to switch between sets of 
 environment variables.
 
+## Supported Python Versions
+
+Python 3.6, 3.7
+
 ## Example
 
 Here's an example of declaring a profile with three properties and using it to consult the values
 of these properties. More advanced examples are available in the user guide below.
-
-This example works in Python 3.6+. In Python 3.5 you need to pass the name of the property 
-to the `Property` initialiser: `password = Password('password')`.
-
 
     import os
     from wr_profiles import Profile, Property

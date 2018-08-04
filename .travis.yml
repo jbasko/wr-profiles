@@ -2,9 +2,9 @@ sudo: false
 language: python
 matrix:
   include:
-  - python: 3.5
-    env: TOXENV=py
   - python: 3.6
+    env: TOXENV=py
+  - python: 3.7
     env: TOXENV=py
 install:
 - pip install tox
