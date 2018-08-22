@@ -20,12 +20,12 @@ def test_parent_profile_initialisation(case):
     profile_name, parent_profile_name, is_live = case[0]
     profile = WP(name=profile_name, parent_name=parent_profile_name, is_live=is_live)
     if case[1]["parent_profile"] is None:
-        assert profile.parent_profile is None
+        assert profile._profile_parent is None
     else:
         parent_profile_sig = (
-            profile.parent_profile.profile_name,
-            profile.parent_profile.parent_profile_name,
-            profile.parent_profile.is_live,
+            profile._profile_parent.profile_name,
+            profile._profile_parent._profile_parent_name,
+            profile._profile_parent.is_live,
         )
         assert parent_profile_sig == case[1]["parent_profile"]
 
@@ -45,25 +45,25 @@ def test_parent_profile_name(monkeypatch):
 
     monkeypatch.setenv("WAREHOUSE_STAGING_PARENT_PROFILE", "production")
 
-    assert WP().parent_profile_name is None
-    assert WP().parent_profile is None
+    assert WP()._profile_parent_name is None
+    assert WP()._profile_parent is None
 
-    assert WP(name="production").parent_profile_name is None
-    assert WP(name="production").parent_profile is None
+    assert WP(name="production")._profile_parent_name is None
+    assert WP(name="production")._profile_parent is None
 
-    assert WP(name="production", is_live=False).parent_profile_name is None
-    assert WP(name="production", is_live=False).parent_profile is None
+    assert WP(name="production", is_live=False)._profile_parent_name is None
+    assert WP(name="production", is_live=False)._profile_parent is None
 
-    assert WP(name="staging").parent_profile_name == "production"
-    assert WP(name="staging").parent_profile.profile_name == "production"
+    assert WP(name="staging")._profile_parent_name == "production"
+    assert WP(name="staging")._profile_parent.profile_name == "production"
 
-    assert WP(name="staging", is_live=False).parent_profile_name is None
-    assert WP(name="staging", is_live=False).parent_profile is None
+    assert WP(name="staging", is_live=False)._profile_parent_name is None
+    assert WP(name="staging", is_live=False)._profile_parent is None
 
 
 def test_loaders():
-    assert WP().loader is Profile._profile_loaders["live"]
-    assert WP(is_live=False).loader is Profile._profile_loaders["frozen"]
+    assert WP()._loader is Profile._profile_loaders["live"]
+    assert WP(is_live=False)._loader is Profile._profile_loaders["frozen"]
 
 
 def test_to_dict():

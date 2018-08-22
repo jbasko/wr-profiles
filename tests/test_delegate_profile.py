@@ -1,7 +1,3 @@
-# TODO Perhaps its best to namespace all Profile methods because Profile class is for user and we don't want to
-# TODO inundate them with a lot of confusing attributes like "load", "active_profile_name" etc.
-# TODO Can we make them private? Or prefix with "profile_" ?
-
 import os
 
 from wr_profiles import Profile, Property
@@ -27,11 +23,11 @@ class AppTestProfile(AppProfile):
 
 profile = AppProfile()
 
-# sandbox_profile = AppProfile.get_instance("sandbox")
+# sandbox_profile = AppProfile.load("sandbox")
 # sandbox_profile.set_prop_value("password", "sandbox-password")
 # os.environ.update(sandbox_profile.to_envvars())  # TODO ability to exclude defaults?
 
-test_profile = AppTestProfile.get_instance("sandbox", is_live=True)
+test_profile = AppTestProfile.load("sandbox", is_live=True)
 assert test_profile.host == 'test-host'
 assert test_profile.username == 'test-username'
 assert test_profile.password == 'test-password'

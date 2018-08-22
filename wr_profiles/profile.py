@@ -36,9 +36,9 @@ class ProfileLoader(ABC):
 
     def to_dict(self, profile: "Profile") -> Dict[Property, Any]:
         values = {}
-        for prop in profile.props:
+        for prop in profile.profile_props:
             try:
-                values[prop] = profile.get_prop_value(prop)
+                values[prop] = profile._get_prop_value(prop)
             except Property.MissingValue:
                 pass
         return values
@@ -53,7 +53,7 @@ class LiveProfileLoader(ProfileLoader):
         os.environ[prop.get_envvar(profile)] = prop.to_str(profile, value)
 
     def has_prop_value(self, profile: "Profile", prop: Union[str, Property]) -> bool:
-        for check_profile in profile.get_profile_tree():
+        for check_profile in profile._get_profile_tree():
             if prop.name in check_profile._const_values:
                 return True
             prop_envvar = prop.get_envvar(check_profile)
@@ -68,16 +68,16 @@ class LiveProfileLoader(ProfileLoader):
         if isinstance(prop, str):
             prop = profile.get_prop(prop)
 
-        for check_profile in profile.get_profile_tree():
+        for check_profile in profile._get_profile_tree():
             if prop.name in check_profile._const_values:
                 return check_profile._const_values[prop.name]
 
-        for check_profile in profile.get_profile_tree():
+        for check_profile in profile._get_profile_tree():
             prop_envvar = prop.get_envvar(check_profile)
             if prop_envvar in os.environ:
                 return prop.from_str(check_profile, os.environ[prop_envvar])
 
-        for check_profile in profile.get_profile_tree():
+        for check_profile in profile._get_profile_tree():
             if prop.name in check_profile._const_defaults:
                 return check_profile._const_defaults[prop.name]
 
@@ -103,7 +103,7 @@ class FrozenProfileLoader(ProfileLoader):
         profile._const_values[prop.name] = value
 
     def has_prop_value(self, profile: "Profile", prop: Union[str, Property]) -> bool:
-        for check_profile in profile.get_profile_tree():
+        for check_profile in profile._get_profile_tree():
             if prop.name in check_profile._const_values:
                 return True
 
@@ -115,11 +115,11 @@ class FrozenProfileLoader(ProfileLoader):
         if isinstance(prop, str):
             prop = profile.get_prop(prop)
 
-        for check_profile in profile.get_profile_tree():
+        for check_profile in profile._get_profile_tree():
             if prop.name in check_profile._const_values:
                 return check_profile._const_values[prop.name]
 
-        for check_profile in profile.get_profile_tree():
+        for check_profile in profile._get_profile_tree():
             if prop.name in check_profile._const_defaults:
                 return check_profile._const_defaults[prop.name]
 
@@ -135,15 +135,15 @@ class FrozenProfileLoader(ProfileLoader):
         # Create a live clone of itself and load all props.
         live_clone = profile.__class__(
             name=profile.profile_name,
-            parent_name=profile.parent_profile_name,
+            parent_name=profile._profile_parent_name,
             is_live=True,
             values=profile._const_values,
         )
 
         values = {}
-        for prop in profile.props:
+        for prop in profile.profile_props:
             if live_clone.has_prop_value(prop):
-                values[prop.name] = live_clone.get_prop_value(prop)
+                values[prop.name] = live_clone._get_prop_value(prop)
 
         profile._const_values = values
 
@@ -161,7 +161,7 @@ class Profile:
     # with the parent profile.
     profile_activating_envvar = None
 
-    props = AttributesList(Property)
+    profile_props = AttributesList(Property)
 
     # shared loaders
     _profile_loaders = {}  # type: Dict[str, ProfileLoader]
@@ -202,7 +202,7 @@ class Profile:
             )
 
     @classmethod
-    def get_instance(
+    def load(
         cls, name=None, parent_name=None, is_live=False, values=None, defaults=None
     ):
         """
@@ -215,23 +215,23 @@ class Profile:
             values=values,
             defaults=defaults,
         )
-        instance.load()
+        instance._do_load()
         return instance
 
     @property
-    def envvar_prefix(self):
+    def _envvar_prefix(self):
         if self.profile_name:
             return f"{self.profile_root}_{self.profile_name}_".upper()
         return f"{self.profile_root}_".upper()
 
     @property
-    def parent_profile_name(self):
+    def _profile_parent_name(self):
         if self._const_parent_name:
             return self._const_parent_name
         elif not self.is_live:
             return None
         elif self.profile_name:
-            return os.environ.get(f"{self.envvar_prefix}PARENT_PROFILE", None)
+            return os.environ.get(f"{self._envvar_prefix}PARENT_PROFILE", None)
         else:
             return None
 
@@ -242,26 +242,26 @@ class Profile:
         elif not self.is_live:
             return None
         else:
-            return self.active_profile_name
+            return self._active_profile_name
 
     @property
-    def active_profile_name_envvar(self):
+    def _active_profile_name_envvar(self):
         if self.profile_activating_envvar:
             return self.profile_activating_envvar
         else:
             return f"{self.profile_root}_PROFILE".upper()
 
     @property
-    def active_profile_name(self):
+    def _active_profile_name(self):
         return (
-            os.environ.get(self.active_profile_name_envvar, None) or None
+            os.environ.get(self._active_profile_name_envvar, None) or None
         )
 
-    @active_profile_name.setter
-    def active_profile_name(self, value):
+    @_active_profile_name.setter
+    def _active_profile_name(self, value):
         if value is None:
             value = ""
-        os.environ[self.active_profile_name_envvar] = value
+        os.environ[self._active_profile_name_envvar] = value
 
     @property
     def is_live(self):
@@ -269,16 +269,16 @@ class Profile:
 
     @property
     def is_active(self):
-        return self.profile_name == self.active_profile_name
+        return self.profile_name == self._active_profile_name
 
     @property
-    def parent_profile(self):
-        profile_name = self.parent_profile_name
+    def _profile_parent(self):
+        profile_name = self._profile_parent_name
         if profile_name is None:
             return None
         else:
             return self.__class__(
-                name=self.parent_profile_name, parent_name=None, is_live=self.is_live
+                name=self._profile_parent_name, parent_name=None, is_live=self.is_live
             )
 
     def get_prop(self, prop_name):
@@ -287,15 +287,15 @@ class Profile:
             raise KeyError(prop_name)
         return prop
 
-    def get_profile_tree(self):
+    def _get_profile_tree(self):
         yield self
-        parent_profile = self.parent_profile
+        parent_profile = self._profile_parent
         while parent_profile:
             yield parent_profile
-            parent_profile = parent_profile.parent_profile
+            parent_profile = parent_profile._profile_parent
 
     @property
-    def loader(self):
+    def _loader(self):
         if self.is_live:
             if "live" not in self._profile_loaders:
                 self._profile_loaders["live"] = LiveProfileLoader()
@@ -311,19 +311,19 @@ class Profile:
         variables or on the froze profile instance.
         If a property only has a default value set, this returns False.
         """
-        return self.loader.has_prop_value(self, prop)
+        return self._loader.has_prop_value(self, prop)
 
-    def get_prop_value(self, prop: Union[str, Property], default=NotSet):
-        return self.loader.get_prop_value(self, prop, default=default)
+    def _get_prop_value(self, prop: Union[str, Property], default=NotSet):
+        return self._loader.get_prop_value(self, prop, default=default)
 
-    def set_prop_value(self, prop: Union[str, Property], value: Any):
-        self.loader.set_prop_value(self, prop, value)
+    def _set_prop_value(self, prop: Union[str, Property], value: Any):
+        self._loader.set_prop_value(self, prop, value)
 
-    def load(self):
-        self.loader.load(self)
+    def _do_load(self):
+        self._loader.load(self)
 
     def to_dict(self) -> Dict[Property, Any]:
-        return self.loader.to_dict(self)
+        return self._loader.to_dict(self)
 
     def to_envvars(self):
         """
@@ -332,10 +332,10 @@ class Profile:
         export = {}
         for prop, prop_value in self.to_dict().items():
             export[prop.get_envvar(self)] = prop.to_str(self, prop_value)
-        if self.parent_profile_name:
+        if self._profile_parent_name:
             export[
-                f"{self.envvar_prefix}PARENT_PROFILE".upper()
-            ] = self.parent_profile_name
+                f"{self._envvar_prefix}PARENT_PROFILE".upper()
+            ] = self._profile_parent_name
         return export
 
     def activate(self, profile_name=NotSet):
@@ -344,4 +344,4 @@ class Profile:
         """
         if profile_name is NotSet:
             profile_name = self.profile_name
-        self.active_profile_name = profile_name
+        self._active_profile_name = profile_name

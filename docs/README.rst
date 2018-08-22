@@ -197,19 +197,19 @@ Normally you"d only need a single instance of your profile class.
 Get Concrete Profile
 ^^^^^^^^^^^^^^^^^^^^
 
-To work with a concrete profile which may not necessarily be activated, use ``get_instance``
+To work with a concrete profile which may not necessarily be activated, use ``load``
 factory method:
 
 .. code-block:: python
 
-    staging = WarehouseProfile.get_instance("staging")
+    staging = WarehouseProfile.load("staging")
 
 By default, this profile will be frozen which means it will be loaded only once during instantiation.
 If you want it to always consult environment variables, pass ``is_live=True``:
 
 .. code-block:: python
 
-    staging = WarehouseProfile.get_instance("staging", is_live=True)
+    staging = WarehouseProfile.load("staging", is_live=True)
 
 
 Activate Profile

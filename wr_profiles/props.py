@@ -45,10 +45,10 @@ class Property:
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        return instance.get_prop_value(self)
+        return instance._get_prop_value(self)
 
     def __set__(self, instance, value):
-        instance.set_prop_value(self, value)
+        instance._set_prop_value(self, value)
 
     def __str__(self):
         return "{}({!r})".format(self.__class__.__name__, self.name)
@@ -58,7 +58,7 @@ class Property:
 
     def get_envvar(self, profile):
         assert self.name
-        return "{}{}".format(profile.envvar_prefix, self.name.upper())
+        return "{}{}".format(profile._envvar_prefix, self.name.upper())
 
     @property
     def has_default(self):
