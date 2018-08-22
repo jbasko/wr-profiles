@@ -28,6 +28,14 @@ class Property:
         self._deserializer = deserializer
         self._serializer = serializer
 
+    def replace(self, **kwargs):
+        # name is not cloned unless explicitly passed because this is a Descriptor
+        if self.has_default:
+            kwargs.setdefault('default', self.default)
+        kwargs.setdefault('deserializer', self._deserializer)
+        kwargs.setdefault('serializer', self._serializer)
+        return self.__class__(**kwargs)
+
     def __hash__(self):
         return hash((self.__class__, self.name))
 

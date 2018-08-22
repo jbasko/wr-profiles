@@ -155,6 +155,12 @@ class Profile:
 
     profile_root = None
 
+    # Defaults to "<profile_root>_PROFILE".
+    # You should set this only when you extend your own Profile classes to customise them
+    # and you want to activate the extended profile with an envvar that does not conflict
+    # with the parent profile.
+    profile_activating_envvar = None
+
     props = AttributesList(Property)
 
     # shared loaders
@@ -239,16 +245,23 @@ class Profile:
             return self.active_profile_name
 
     @property
+    def active_profile_name_envvar(self):
+        if self.profile_activating_envvar:
+            return self.profile_activating_envvar
+        else:
+            return f"{self.profile_root}_PROFILE".upper()
+
+    @property
     def active_profile_name(self):
         return (
-            os.environ.get(f"{self.profile_root}_PROFILE".upper(), None) or None
+            os.environ.get(self.active_profile_name_envvar, None) or None
         )
 
     @active_profile_name.setter
     def active_profile_name(self, value):
         if value is None:
             value = ""
-        os.environ[f"{self.profile_root}_PROFILE".upper()] = value
+        os.environ[self.active_profile_name_envvar] = value
 
     @property
     def is_live(self):
