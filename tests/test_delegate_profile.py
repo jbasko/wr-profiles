@@ -3,6 +3,11 @@ import os
 from wr_profiles import Profile, Property
 
 
+# TODO consider sqlalchemy-like access to a bound property:
+# profile = AppProfile()
+# profile.p.username -- it's not profile.username (the value), but AppProfile.username yet bound to profile instance.
+
+
 class AppProfile(Profile):
     profile_root = "app"
 
