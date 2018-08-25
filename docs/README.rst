@@ -16,7 +16,7 @@ You don't.
 
 But you could find it useful if you use environment variables as primary means of passing 
 configuration to your program, and you have scenarios when your program has to switch between sets of 
-environment variables.
+environment variables (which we call *profiles*).
 
 Supported Python Versions
 -------------------------
@@ -73,6 +73,13 @@ Installation
 
 If you decide to use this library, make sure you pin the version number in your requirements file.
 
+We are following interpretation of the semantic versioning schema:
+
+* ``v2.x.a -> v2.x.b`` - bugfix or non-breaking change, safe to upgrade.
+* ``v2.x.* -> v3.y.*`` - potentially breaking changes, feature added, minimal changes to user code may be required
+* ``v2.* -> v3.*`` - complete changeover
+
+
 User Guide
 ==========
 
@@ -128,11 +135,13 @@ Active Profile
 The **active profile** is the profile of a service that should be used 
 according to the environment variables.
 
-The active profile can be switched by setting a special environment variable
+By default, the active profile can be switched by setting a special environment variable
 ``<PROFILE_ROOT>_PROFILE``. For ``WarehouseProfile`` that would be ``WAREHOUSE_PROFILE``.
 
-If this variable is not set, the active profile consults environment variables in the
-form:
+The name of this variable can be customised by setting your class's ``profile_activating_envvar``.
+
+If this variable is not set, the active profile is *an empty string*, and the environment variables
+consulted are in the form:
 
 .. code-block:: bash
 
@@ -191,7 +200,7 @@ instantiated with no arguments:
 
     warehouse_profile = WarehouseProfile()
 
-Normally you"d only need a single instance of your profile class.
+Normally you'd only need a single instance of your profile class.
 
 
 Get Concrete Profile
@@ -211,6 +220,38 @@ If you want it to always consult environment variables, pass ``is_live=True``:
 
     staging = WarehouseProfile.load("staging", is_live=True)
 
+
+Customise Profile-Activating Environment Variable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Imagine you have your ``WarehouseProfile`` and you want to use it in tests. In tests it should have different defaults.
+Perhaps some properties with no defaults in production can have defaults in tests.
+
+.. code-block:: python
+
+    class WarehouseTestProfile(WarehouseProfile):
+
+        # If you don't set this, it would be "WAREHOUSE_PROFILE" which would conflict
+        # with your non-test profile.
+        profile_activating_envvar = "WAREHOUSE_TEST_PROFILE"
+
+        host = WarehouseProfile.host.replace(default="test-host")
+        username = WarehouseProfile.username.replace(default="test-user")
+
+        # No need to specify "username" here as it is the same as in WarehouseProfile
+
+In your application you would then have two instances:
+
+.. code-block:: python
+
+    profile = WarehouseProfile()
+    test_profile = WarehouseTestProfile()
+
+Now you can reuse your non-test profiles in tests when it makes sense. For example, if you have set up environment
+variables in the form ``WAREHOUSE_SANDBOX_*`` then this "sandbox" profile can be used in tests by just setting
+``WAREHOUSE_TEST_PROFILE`` to ``sandbox``.
+
+Note that ``profile_root`` for both profiles is the same.
 
 Activate Profile
 ^^^^^^^^^^^^^^^^
