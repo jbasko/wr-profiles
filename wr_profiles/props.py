@@ -28,6 +28,14 @@ class Property:
         self._deserializer = deserializer
         self._serializer = serializer
 
+    def replace(self, **kwargs):
+        # name is not cloned unless explicitly passed because this is a Descriptor
+        if self.has_default:
+            kwargs.setdefault('default', self.default)
+        kwargs.setdefault('deserializer', self._deserializer)
+        kwargs.setdefault('serializer', self._serializer)
+        return self.__class__(**kwargs)
+
     def __hash__(self):
         return hash((self.__class__, self.name))
 
@@ -37,10 +45,10 @@ class Property:
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        return instance.get_prop_value(self)
+        return instance._get_prop_value(self)
 
     def __set__(self, instance, value):
-        instance.set_prop_value(self, value)
+        instance._set_prop_value(self, value)
 
     def __str__(self):
         return "{}({!r})".format(self.__class__.__name__, self.name)
@@ -50,7 +58,7 @@ class Property:
 
     def get_envvar(self, profile):
         assert self.name
-        return "{}{}".format(profile.envvar_prefix, self.name.upper())
+        return "{}{}".format(profile._envvar_prefix, self.name.upper())
 
     @property
     def has_default(self):

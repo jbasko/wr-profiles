@@ -11,7 +11,7 @@ def test_default_profile_is_active_and_live():
 def test_custom_profile_is_frozen_but_could_be_active(monkeypatch):
     monkeypatch.setenv("WAREHOUSE_PROFILE", "staging")
 
-    profile = WarehouseProfile.get_instance("staging")
+    profile = WarehouseProfile.load("staging")
     assert profile.profile_name == "staging"
     assert profile.is_active
 

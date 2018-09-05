@@ -13,8 +13,8 @@ def test_ultimate_live_profile():
     assert profile.is_live is True
 
     assert not profile.profile_name
-    assert not profile.parent_profile_name
-    assert not profile.parent_profile
+    assert not profile._profile_parent_name
+    assert not profile._profile_parent
 
     assert profile.is_active
 
@@ -39,7 +39,7 @@ def test_concrete_frozen_profile(monkeypatch):
     assert live.host == "localhost"
     assert frozen.host == "localhost"
 
-    frozen.load()
+    frozen._do_load()
 
     assert live.host == frozen.host
     assert live.username == frozen.username
