@@ -1,9 +1,12 @@
-import typing
+from typing import TypeVar, Type, get_type_hints
 
 from wr_profiles import Profile, Property
 
 
-def envvar_profile(profile_cls) -> typing.Type[Profile]:
+P = TypeVar('P')
+
+
+def envvar_profile(profile_cls: Type[P]) -> Type[P]:
     dct = {
         "profile_root": profile_cls.profile_root,
     }
@@ -11,7 +14,7 @@ def envvar_profile(profile_cls) -> typing.Type[Profile]:
     property_names = []
 
     for cls in reversed(profile_cls.__mro__[:-1]):
-        for k, v in typing.get_type_hints(cls).items():
+        for k, v in get_type_hints(cls).items():
             dct[k] = Property(name=k, default=None)
             if k not in property_names:
                 property_names.append(k)
@@ -46,10 +49,3 @@ class WarehouseTestProfile(WarehouseProfile):
 
 print(WarehouseTestProfile._profile_property_names)
 print(WarehouseTestProfile.host)
-
-
-# profile = WarehouseProfile()
-# print("profile:", profile)
-#
-# test_profile = WarehouseTestProfile()
-# print("test_profile:", test_profile, test_profile._profile_property_names)
