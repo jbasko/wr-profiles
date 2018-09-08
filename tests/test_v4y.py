@@ -84,7 +84,7 @@ def test_inheritance():
     assert warehouse.profile_is_live
 
     assert warehouse.to_envvars() == {
-        "WAREHOUSE_HOST": "test.localhost"
+        "WAREHOUSE_TEST_HOST": "test.localhost"
     }
 
 
@@ -92,34 +92,40 @@ def test_initialisation():
     class Original:
         a: str = "a_default"
         b: str = None
+        c: str
 
-    assert get_type_hints(Original) == {"a": str, "b": str}
+    assert get_type_hints(Original) == {"a": str, "b": str, "c": str}
+    assert Original.a == "a_default"
+    assert Original.b is None
+    assert not hasattr(Original, "c")
 
     DecoratedOriginal = envvar_profile(Original)
 
     assert issubclass(DecoratedOriginal, SimpleProfile)
-    assert DecoratedOriginal.profile_properties == ["a", "b"]
-    assert DecoratedOriginal.a.default == "a_default"
-    assert DecoratedOriginal.a.type_ is str
-    assert DecoratedOriginal.b.default is None
-    assert DecoratedOriginal.a.type_ is str
+    assert DecoratedOriginal.profile_properties == ["a", "b", "c"]
+    assert DecoratedOriginal.a == SimpleProfileProperty("a", "a_default", str)
+    assert DecoratedOriginal.b == SimpleProfileProperty("b", None, str)
+    assert DecoratedOriginal.c == SimpleProfileProperty("c", None, str)
 
     class Derived(DecoratedOriginal):
         b: str = "b_default"
-        c: str = None
+        d: str = None
+        e: str
 
-    assert Derived.profile_properties == ["a", "b"]
+    assert Derived.profile_properties == ["a", "b", "c"]
     assert Derived.b == "b_default"
-    assert Derived.c is None
+    assert Derived.d is None
+    assert not hasattr(Derived, "e")
 
     DecoratedDerived = envvar_profile(Derived)
 
-    assert DecoratedDerived.profile_properties == ["a", "b", "c"]
+    assert DecoratedDerived.profile_properties == ["a", "b", "c", "d", "e"]
 
-    assert isinstance(DecoratedDerived.b, SimpleProfileProperty)
-    assert DecoratedDerived.b.name == "b"
-    assert DecoratedDerived.b.default == "b_default"
-    assert DecoratedDerived.b.type_ is str
+    assert DecoratedDerived.a == SimpleProfileProperty("a", "a_default", str)
+    assert DecoratedDerived.b == SimpleProfileProperty("b", "b_default", str)
+    assert DecoratedDerived.c == SimpleProfileProperty("c", None, str)
+    assert DecoratedDerived.d == SimpleProfileProperty("d", None, str)
+    assert DecoratedDerived.e == SimpleProfileProperty("e", None, str)
 
     assert isinstance(DecoratedDerived.c, SimpleProfileProperty)
     assert DecoratedDerived.c.name == "c"
@@ -132,14 +138,16 @@ def test_initialisation():
     assert DecoratedDerived.a.type_ is str
 
     class DoubleDerived(DecoratedDerived):
-        d: str = None
+        f: str = None
 
-    assert DoubleDerived.profile_properties == ["a", "b", "c"]
+    assert DoubleDerived.profile_properties == ["a", "b", "c", "d", "e"]
 
     DecoratedDoubleDerived = envvar_profile(DoubleDerived)
-    assert DecoratedDoubleDerived.profile_properties == ["a", "b", "c", "d"]
+    assert DecoratedDoubleDerived.profile_properties == ["a", "b", "c", "d", "e", "f"]
 
-    assert DecoratedDoubleDerived.a.default == "a_default"
-    assert DecoratedDoubleDerived.b.default == "b_default"
-    assert DecoratedDoubleDerived.c.default is None
-    assert DecoratedDoubleDerived.d.default is None
+    assert DecoratedDoubleDerived.a == SimpleProfileProperty("a", "a_default", str)
+    assert DecoratedDoubleDerived.b == SimpleProfileProperty("b", "b_default", str)
+    assert DecoratedDoubleDerived.c == SimpleProfileProperty("c", None, str)
+    assert DecoratedDoubleDerived.d == SimpleProfileProperty("d", None, str)
+    assert DecoratedDoubleDerived.e == SimpleProfileProperty("e", None, str)
+    assert DecoratedDoubleDerived.f == SimpleProfileProperty("f", None, str)

@@ -31,6 +31,12 @@ class SimpleProfileProperty:
     def __repr__(self):
         return "{}({!r})".format(self.__class__.__name__, self.name)
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self == other
+
     def get_envvar(self, profile):
         assert self.name
         return "{}{}".format(profile._envvar_prefix, self.name.upper())
@@ -413,17 +419,14 @@ def envvar_profile(profile_cls: typing.Type[P]) -> typing.Type[P]:
             if k.startswith("_") or k.startswith("profile_"):
                 continue
 
-            if k not in cls.__dict__:
-                continue
-
-            value = getattr(cls, k)
-            if isinstance(value, SimpleProfileProperty):
-                dct[k] = SimpleProfileProperty(name=k, default=value.default, type_=v)
-            else:
-                dct[k] = SimpleProfileProperty(name=k, default=value, type_=v)
-
             if k not in property_names:
                 property_names.append(k)
+
+            default = getattr(cls, k, None)
+            if isinstance(default, SimpleProfileProperty):
+                default = default.default
+
+            dct[k] = SimpleProfileProperty(name=k, default=default, type_=v)
 
     dct["profile_properties"] = property_names
 
