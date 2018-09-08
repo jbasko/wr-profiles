@@ -11,7 +11,7 @@ PROFILE_NAME_COMPONENT_REGEX = re.compile(r"^[a-z]([\d\w]*[a-z0-9])?$")
 NotSet = object()
 
 
-class SimpleProfileProperty:
+class EnvvarProfileProperty:
     def __init__(self, name, default=None, type_=None):
         self.name = name
         self.default = default
@@ -41,10 +41,10 @@ class SimpleProfileProperty:
         assert self.name
         return "{}{}".format(profile._envvar_prefix, self.name.upper())
 
-    def from_str(self, profile: "SimpleProfile", value: str):
+    def from_str(self, profile: "EnvvarProfile", value: str):
         return value
 
-    def to_str(self, profile: "SimpleProfile", value: typing.Any) -> typing.Union[str, None]:
+    def to_str(self, profile: "EnvvarProfile", value: typing.Any) -> typing.Union[str, None]:
         if value is None:
             return None
         else:
@@ -61,30 +61,30 @@ class ProfileLoader(ABC):
         pass
 
     @abstractmethod
-    def has_prop_value(self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty]) -> bool:
+    def has_prop_value(self, profile: "EnvvarProfile", prop: typing.Union[str, EnvvarProfileProperty]) -> bool:
         pass
 
     @abstractmethod
     def get_prop_value(
-        self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty], default: typing.Any = NotSet
+        self, profile: "EnvvarProfile", prop: typing.Union[str, EnvvarProfileProperty], default: typing.Any = NotSet
     ) -> typing.Any:
         pass
 
     @abstractmethod
     def set_prop_value(
-        self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty], value: typing.Any
+        self, profile: "EnvvarProfile", prop: typing.Union[str, EnvvarProfileProperty], value: typing.Any
     ):
         pass
 
 
 class LiveProfileLoader(ProfileLoader):
     def set_prop_value(
-        self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty], value: typing.Any
+        self, profile: "EnvvarProfile", prop: typing.Union[str, EnvvarProfileProperty], value: typing.Any
     ):
         prop = profile._get_prop(prop)
         os.environ[prop.get_envvar(profile)] = prop.to_str(profile, value)
 
-    def has_prop_value(self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty]) -> bool:
+    def has_prop_value(self, profile: "EnvvarProfile", prop: typing.Union[str, EnvvarProfileProperty]) -> bool:
         prop = profile._get_prop(prop)
         for check_profile in profile._get_profile_tree():
             if prop.name in check_profile._const_values:
@@ -96,7 +96,7 @@ class LiveProfileLoader(ProfileLoader):
         return False
 
     def get_prop_value(
-        self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty], default: typing.Any = NotSet
+        self, profile: "EnvvarProfile", prop: typing.Union[str, EnvvarProfileProperty], default: typing.Any = NotSet
     ) -> typing.Any:
         prop = profile._get_prop(prop)
 
@@ -125,12 +125,12 @@ class LiveProfileLoader(ProfileLoader):
 
 class FrozenProfileLoader(ProfileLoader):
     def set_prop_value(
-        self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty], value: typing.Any
+        self, profile: "EnvvarProfile", prop: typing.Union[str, EnvvarProfileProperty], value: typing.Any
     ):
         prop = profile._get_prop(prop)
         profile._const_values[prop.name] = value
 
-    def has_prop_value(self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty]) -> bool:
+    def has_prop_value(self, profile: "EnvvarProfile", prop: typing.Union[str, EnvvarProfileProperty]) -> bool:
         for check_profile in profile._get_profile_tree():
             if prop.name in check_profile._const_values:
                 return True
@@ -138,7 +138,7 @@ class FrozenProfileLoader(ProfileLoader):
         return False
 
     def get_prop_value(
-        self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty], default: typing.Any = NotSet
+        self, profile: "EnvvarProfile", prop: typing.Union[str, EnvvarProfileProperty], default: typing.Any = NotSet
     ) -> typing.Any:
         prop = profile._get_prop(prop)
 
@@ -173,7 +173,7 @@ class FrozenProfileLoader(ProfileLoader):
         profile._const_values = values
 
 
-class SimpleProfile(collections.abc.Mapping):
+class EnvvarProfile(collections.abc.Mapping):
     """
     Represents a set of configuration values backed by environment variables.
     """
@@ -230,7 +230,7 @@ class SimpleProfile(collections.abc.Mapping):
     @classmethod
     def load(
         cls, name=None, parent_name=None, is_live=False, values=None, defaults=None
-    ) -> "SimpleProfile":
+    ) -> "EnvvarProfile":
         """
         Get a loaded frozen instance of a specific profile.
         """
@@ -307,7 +307,7 @@ class SimpleProfile(collections.abc.Mapping):
         return self.profile_name == self._active_profile_name
 
     @property
-    def _profile_parent(self) -> typing.Optional["SimpleProfile"]:
+    def _profile_parent(self) -> typing.Optional["EnvvarProfile"]:
         profile_name = self._profile_parent_name
         if profile_name is None:
             return None
@@ -316,15 +316,15 @@ class SimpleProfile(collections.abc.Mapping):
                 name=self._profile_parent_name, parent_name=None, is_live=self.profile_is_live
             )
 
-    def _get_prop(self, prop: typing.Union[str, SimpleProfileProperty]) -> SimpleProfileProperty:
-        if isinstance(prop, SimpleProfileProperty):
+    def _get_prop(self, prop: typing.Union[str, EnvvarProfileProperty]) -> EnvvarProfileProperty:
+        if isinstance(prop, EnvvarProfileProperty):
             return prop
         prop = getattr(self.__class__, prop, None)
-        if prop is None or not isinstance(prop, SimpleProfileProperty):
+        if prop is None or not isinstance(prop, EnvvarProfileProperty):
             raise KeyError(prop)
         return prop
 
-    def _get_profile_tree(self) -> typing.Generator["SimpleProfile", None, None]:
+    def _get_profile_tree(self) -> typing.Generator["EnvvarProfile", None, None]:
         yield self
         parent_profile = self._profile_parent
         while parent_profile:
@@ -342,7 +342,7 @@ class SimpleProfile(collections.abc.Mapping):
                 self._profile_loaders["frozen"] = FrozenProfileLoader()
             return self._profile_loaders["frozen"]
 
-    def has_prop_value(self, prop: typing.Union[str, SimpleProfileProperty]) -> bool:
+    def has_prop_value(self, prop: typing.Union[str, EnvvarProfileProperty]) -> bool:
         """
         Returns True if the property has a concrete value set either via environment
         variables or on the froze profile instance.
@@ -350,10 +350,10 @@ class SimpleProfile(collections.abc.Mapping):
         """
         return self._loader.has_prop_value(self, prop)
 
-    def _get_prop_value(self, prop: typing.Union[str, SimpleProfileProperty], default=NotSet):
+    def _get_prop_value(self, prop: typing.Union[str, EnvvarProfileProperty], default=NotSet):
         return self._loader.get_prop_value(self, prop, default=default)
 
-    def _set_prop_value(self, prop: typing.Union[str, SimpleProfileProperty], value: typing.Any):
+    def _set_prop_value(self, prop: typing.Union[str, EnvvarProfileProperty], value: typing.Any):
         self._loader.set_prop_value(self, prop, value)
 
     def _do_load(self):
@@ -393,41 +393,77 @@ def to_snake_case(camel_case: str) -> str:
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
-def envvar_profile(profile_cls: typing.Type[P]) -> typing.Type[P]:
+def envvar_profile_cls(profile_cls=None, **profile_cls_options):
+    """
+    A class decorator that makes the decorated class a sub-class of EnvvarProfile and transforms
+    its type annotations into envvar profile properties.
+    """
 
-    profile_root = to_snake_case(profile_cls.__name__)
-    if "profile_root" in profile_cls.__dict__:
-        profile_root = profile_cls.profile_root
+    def decorator(profile_cls):
+        profile_option_names = ["profile_root", "profile_activating_envvar"]
+        profile_option_defaults = {
+            "profile_root": to_snake_case(profile_cls.__name__)
+        }
 
-    dct = {
-        "profile_root": profile_root
-    }
+        dct = {}
+        for option_name in profile_option_names:
+            if option_name in profile_cls_options:
+                dct[option_name] = profile_cls_options[option_name]
+            elif option_name in profile_cls.__dict__:
+                dct[option_name] = getattr(profile_cls, option_name)
+            elif option_name in profile_option_defaults:
+                dct[option_name] = profile_option_defaults[option_name]
 
-    property_names = []
+        property_names = []
 
-    for cls in reversed(profile_cls.__mro__[:-1]):
-        # Exclude base classes that aren't SimpleProfile sub-classes or aren't the class being decorated.
-        if not issubclass(cls, SimpleProfile) and cls is not profile_cls:
-            continue
-
-        for k, v in typing.get_type_hints(cls).items():
-            if k.startswith("_") or k.startswith("profile_"):
+        for cls in reversed(profile_cls.__mro__[:-1]):
+            # Exclude base classes that aren't SimpleProfile sub-classes or aren't the class being decorated.
+            if not issubclass(cls, EnvvarProfile) and cls is not profile_cls:
                 continue
 
-            if k not in property_names:
-                property_names.append(k)
+            for k, v in typing.get_type_hints(cls).items():
+                if k.startswith("_") or k.startswith("profile_"):
+                    continue
 
-            default = getattr(cls, k, None)
-            if isinstance(default, SimpleProfileProperty):
-                default = default.default
+                if k not in property_names:
+                    property_names.append(k)
 
-            dct[k] = SimpleProfileProperty(name=k, default=default, type_=v)
+                default = getattr(cls, k, None)
+                if isinstance(default, EnvvarProfileProperty):
+                    default = default.default
 
-    dct["profile_properties"] = property_names
+                dct[k] = EnvvarProfileProperty(name=k, default=default, type_=v)
 
-    bases = []
-    if not issubclass(profile_cls, SimpleProfile):
-        bases.append(SimpleProfile)
-    bases.append(profile_cls)
+        dct["profile_properties"] = property_names
 
-    return type(profile_cls.__name__, tuple(bases), dct)
+        bases = []
+        if not issubclass(profile_cls, EnvvarProfile):
+            bases.append(EnvvarProfile)
+        bases.append(profile_cls)
+
+        return type(profile_cls.__name__, tuple(bases), dct)
+
+    if profile_cls is None:
+        return decorator
+    else:
+        return decorator(profile_cls)
+
+
+def envvar_profile(
+    profile_root: str,
+    profile_properties: typing.Dict[str, typing.Optional[str]] = None,
+    **profile_properties_as_kwargs,
+) -> typing.Type[EnvvarProfile]:
+    """
+    Creates an EnvvarProfile instance without the need for an explicit declaration of the envvar profile class.
+    """
+    if profile_properties:
+        profile_properties_as_kwargs.update(profile_properties)
+    return type(f"{profile_root}Profile", (EnvvarProfile,), {
+        "profile_root": profile_root.lower(),
+        "profile_properties": list(profile_properties_as_kwargs.keys()),
+        **{
+            k: EnvvarProfileProperty(name=k, default=v, type_=str)
+            for k, v in profile_properties_as_kwargs.items()
+        },
+    })()
