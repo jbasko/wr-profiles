@@ -393,6 +393,7 @@ def to_snake_case(camel_case: str) -> str:
 
 
 def envvar_profile(profile_cls: typing.Type[P]) -> typing.Type[P]:
+
     profile_root = to_snake_case(profile_cls.__name__)
     if "profile_root" in profile_cls.__dict__:
         profile_root = profile_cls.profile_root
@@ -404,15 +405,23 @@ def envvar_profile(profile_cls: typing.Type[P]) -> typing.Type[P]:
     property_names = []
 
     for cls in reversed(profile_cls.__mro__[:-1]):
-        print(cls, "for", profile_cls)
+        # Exclude base classes that aren't SimpleProfile sub-classes or aren't the class being decorated.
+        if not issubclass(cls, SimpleProfile) and cls is not profile_cls:
+            continue
+
         for k, v in typing.get_type_hints(cls).items():
             if k.startswith("_") or k.startswith("profile_"):
                 continue
-            # if cls is profile_cls:
-            dct[k] = SimpleProfileProperty(name=k, default=getattr(cls, k, None), type_=v)
-            # else:
-            #     print(cls.__dict__)
-            #     dct[k] = SimpleProfileProperty(name=k, default=getattr(cls, k).default, type_=v)
+
+            if k not in cls.__dict__:
+                continue
+
+            value = getattr(cls, k)
+            if isinstance(value, SimpleProfileProperty):
+                dct[k] = SimpleProfileProperty(name=k, default=value.default, type_=v)
+            else:
+                dct[k] = SimpleProfileProperty(name=k, default=value, type_=v)
+
             if k not in property_names:
                 property_names.append(k)
 
