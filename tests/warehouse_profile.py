@@ -1,9 +1,10 @@
-from wr_profiles import Profile, Property
+from wr_profiles.envvar_profile import envvar_profile_cls
 
 
-class WarehouseProfile(Profile):
+@envvar_profile_cls
+class WarehouseProfile:
     profile_root = "warehouse"
 
-    host = Property("host", default="localhost")
-    username = Property("username")
-    password = Property("password")
+    host: str = "localhost"
+    username: str
+    password: str

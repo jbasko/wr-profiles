@@ -1,6 +1,10 @@
-__version__ = "3.0.0"
+__version__ = "4.0.0"
 
-from .profile import Profile
-from .props import Property
+from .envvar_profile import EnvvarProfile, EnvvarProfileProperty, envvar_profile, envvar_profile_cls
 
-__all__ = ["Profile", "Property"]
+__all__ = [
+    "EnvvarProfile",
+    "EnvvarProfileProperty",
+    "envvar_profile",
+    "envvar_profile_cls",
+]

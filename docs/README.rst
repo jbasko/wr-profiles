@@ -34,12 +34,13 @@ of these properties. More advanced examples are available in the user guide belo
 
     # profiles.py
 
-    from wr_profiles import Profile, Property
+    from wr_profiles import envvar_profile_cls
 
-    class WarehouseProfile(Profile):
-        profile_root = "warehouse"
-        username = Property(default="default-username")
-        password = Property()
+    @envvar_profile_cls
+    class WarehouseProfile:
+        host: str = "localhost"
+        username: str
+        password: str
 
     warehouse_profile = WarehouseProfile()
 
@@ -59,6 +60,7 @@ of these properties. More advanced examples are available in the user guide belo
 
     from profiles import warehouse_profile
 
+    assert warehouse_profile.host == "localhost"
     assert warehouse_profile.username == "production-username"
     assert warehouse_profile.password == "staging-password"
 
@@ -92,8 +94,8 @@ Profile
 A **profile** represents a set of configurable **properties** of a single service
 backed by environment variables.
 
-There can be multiple unrelated profiles (multiple classes extending ``Profile`` class),
-each providing interface to properties of a different service.
+In your application, there can be multiple unrelated profiles each providing interface
+to properties of a different service.
 
 Instances of profiles associated with the same service share the same base class and are identified by
 ``profile_root`` specified in that base class. Is is the root from which all relevant
@@ -113,12 +115,13 @@ active configuration.
 
 .. code-block:: python
 
-    class WarehouseProfile(Profile):
-        profile_root = "warehouse"
-        
-        host = Property(default="localhost")
-        username = Property()
-        password = Property(default="")
+    from wr_profiles import envvar_profile_cls
+
+    @envvar_profile_cls
+    class WarehouseProfile:
+        host: str = "localhost"
+        username: str
+        password: str
     
     warehouse_profile = WarehouseProfile()
 
@@ -172,7 +175,7 @@ to inherit its property values from a **parent profile** by setting:
 For example, ``WAREHOUSE_STAGING_PARENT_PROFILE``, if set to ``production``, would mean that
 if environment variable ``WAREHOUSE_STAGING_HOST`` was not set, property value loader would
 consult ``WAREHOUSE_PRODUCTION_HOST`` instead. And only if that variable was not present,
-the default value of the property (if available) would be used.
+the default value of the property would be used.
 
 *Limitation*: The default profile (``profile_name=""``) cannot be used as a parent profile.
 If you specify empty string as ``<PROFILE_ROOT>_<PROFILE_NAME>_PARENT_PROFILE`` then this
@@ -214,31 +217,30 @@ factory method:
     staging = WarehouseProfile.load("staging")
 
 By default, this profile will be frozen which means it will be loaded only once during instantiation.
-If you want it to always consult environment variables, pass ``is_live=True``:
+If you want it to always consult environment variables, pass ``profile_is_live=True``:
 
 .. code-block:: python
 
-    staging = WarehouseProfile.load("staging", is_live=True)
+    staging = WarehouseProfile.load("staging", profile_is_live=True)
 
 
 Customise Profile-Activating Environment Variable
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Imagine you have your ``WarehouseProfile`` and you want to use it in tests. In tests it should have different defaults.
-Perhaps some properties with no defaults in production can have defaults in tests.
 
 .. code-block:: python
 
+    @envvar_profile_cls
     class WarehouseTestProfile(WarehouseProfile):
 
         # If you don't set this, it would be "WAREHOUSE_PROFILE" which would conflict
         # with your non-test profile.
         profile_activating_envvar = "WAREHOUSE_TEST_PROFILE"
 
-        host = WarehouseProfile.host.replace(default="test-host")
-        username = WarehouseProfile.username.replace(default="test-user")
+        host: str = "test-host"
+        username: str = "test-user"
 
-        # No need to specify "username" here as it is the same as in WarehouseProfile
 
 In your application you would then have two instances:
 
@@ -301,7 +303,8 @@ Inspect Property
 
 .. code-block:: python
 
-    assert isinstance(WarehouseProfile.username, Property)
+    from wr_profiles import EnvvarProfileProperty
+
+    assert isinstance(WarehouseProfile.username, EnvvarProfileProperty)
     assert WarehouseProfile.username.name == "username"
-    assert WarehouseProfile.username.has_default
     assert WarehouseProfile.username.default == "default-username"
