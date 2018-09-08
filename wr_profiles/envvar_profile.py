@@ -81,13 +81,11 @@ class LiveProfileLoader(ProfileLoader):
     def set_prop_value(
         self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty], value: typing.Any
     ):
-        if isinstance(prop, str):
-            prop = profile._get_prop(prop)
+        prop = profile._get_prop(prop)
         os.environ[prop.get_envvar(profile)] = prop.to_str(profile, value)
 
     def has_prop_value(self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty]) -> bool:
-        if isinstance(prop, str):
-            prop = profile[prop]
+        prop = profile._get_prop(prop)
         for check_profile in profile._get_profile_tree():
             if prop.name in check_profile._const_values:
                 return True
@@ -100,8 +98,7 @@ class LiveProfileLoader(ProfileLoader):
     def get_prop_value(
         self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty], default: typing.Any = NotSet
     ) -> typing.Any:
-        if isinstance(prop, str):
-            prop = profile._get_prop(prop)
+        prop = profile._get_prop(prop)
 
         for check_profile in profile._get_profile_tree():
             if prop.name in check_profile._const_values:
@@ -130,8 +127,7 @@ class FrozenProfileLoader(ProfileLoader):
     def set_prop_value(
         self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty], value: typing.Any
     ):
-        if isinstance(prop, str):
-            prop = profile._get_prop(prop)
+        prop = profile._get_prop(prop)
         profile._const_values[prop.name] = value
 
     def has_prop_value(self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty]) -> bool:
@@ -144,8 +140,7 @@ class FrozenProfileLoader(ProfileLoader):
     def get_prop_value(
         self, profile: "SimpleProfile", prop: typing.Union[str, SimpleProfileProperty], default: typing.Any = NotSet
     ) -> typing.Any:
-        if isinstance(prop, str):
-            prop = profile._get_prop(prop)
+        prop = profile._get_prop(prop)
 
         for check_profile in profile._get_profile_tree():
             if prop.name in check_profile._const_values:
