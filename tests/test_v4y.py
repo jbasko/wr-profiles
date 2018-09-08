@@ -1,6 +1,6 @@
 from typing import get_type_hints
 
-from wr_profiles.envvar_profile import envvar_profile_cls, EnvvarProfile, EnvvarProfileProperty, envvar_profile
+from wr_profiles.envvar_profile import EnvvarProfile, EnvvarProfileProperty, envvar_profile, envvar_profile_cls
 
 
 @envvar_profile_cls
