@@ -1,17 +1,15 @@
 import pytest
 
 from tests.warehouse_profile import WarehouseProfile
-from wr_profiles import Property
 
 
 @pytest.mark.parametrize(
-    "name,is_live", [["staging", True], ["staging", False], [None, True], [None, False]]
+    "name,profile_is_live", [["staging", True], ["staging", False], [None, True], [None, False]]
 )
-def test_sets_profile_property_value(name, is_live):
-    profile = WarehouseProfile(name=name, is_live=is_live)
+def test_sets_profile_property_value(name, profile_is_live):
+    profile = WarehouseProfile(name=name, profile_is_live=profile_is_live)
 
-    with pytest.raises(Property.MissingValue):
-        _ = profile.username  # noqa
+    assert profile.username is None
 
     profile.username = "the-new-username"
     assert profile.username == "the-new-username"

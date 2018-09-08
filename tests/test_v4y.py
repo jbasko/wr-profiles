@@ -108,8 +108,6 @@ def test_end_to_end(monkeypatch):
     assert list(warehouse) == ["host", "username", "password"]
     assert dict(warehouse) == {"host": "localhost", "username": None, "password": None}
 
-
-
     assert warehouse.to_envvars() == {
         "WAREHOUSE_HOST": "localhost",
     }

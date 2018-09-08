@@ -9,16 +9,17 @@ def test_const_values_set_on_live_profile_instance_override_envvars(
 ):
     wp = WarehouseProfile(
         name=profile_name,
-        is_live=True,
+        profile_is_live=True,
         values={"host": "localhost.test", "username": "test"},
     )
 
-    assert wp.is_live
+    assert wp.profile_is_live
     assert wp.host == "localhost.test"
     assert wp.username == "test"
     assert wp.to_dict() == {
-        WarehouseProfile.host: "localhost.test",
-        WarehouseProfile.username: "test",
+        "host": "localhost.test",
+        "username": "test",
+        "password": None,
     }
 
     monkeypatch.setenv(WarehouseProfile.host.get_envvar(wp), "ignored-host")

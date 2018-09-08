@@ -160,7 +160,7 @@ class FrozenProfileLoader(ProfileLoader):
         live_clone = profile.__class__(
             name=profile.profile_name,
             parent_name=profile._profile_parent_name,
-            is_live=True,
+            profile_is_live=True,
             values=profile._const_values,
         )
 
@@ -197,14 +197,16 @@ class EnvvarProfile(collections.abc.Mapping):
         *,
         name=None,
         parent_name=None,
-        is_live=True,
+        profile_is_live=True,
         values=None,
         defaults=None,
         **kwargs,
     ):
+        super().__init__(**kwargs)
+
         self._const_name = name
         self._const_parent_name = parent_name
-        self._const_is_live = is_live
+        self._const_is_live = profile_is_live
 
         self._const_values = {}
         if values is not None:
@@ -213,9 +215,6 @@ class EnvvarProfile(collections.abc.Mapping):
         self._const_defaults = {}
         if defaults is not None:
             self._const_defaults.update(defaults)
-
-        if kwargs:
-            raise ValueError(kwargs)
 
         if not self.profile_root:
             raise ValueError(
@@ -229,7 +228,7 @@ class EnvvarProfile(collections.abc.Mapping):
 
     @classmethod
     def load(
-        cls, name=None, parent_name=None, is_live=False, values=None, defaults=None
+        cls, name=None, parent_name=None, profile_is_live=False, values=None, defaults=None
     ) -> "EnvvarProfile":
         """
         Get a loaded frozen instance of a specific profile.
@@ -237,7 +236,7 @@ class EnvvarProfile(collections.abc.Mapping):
         instance = cls(
             name=name,
             parent_name=parent_name,
-            is_live=is_live,
+            profile_is_live=profile_is_live,
             values=values,
             defaults=defaults,
         )
@@ -313,7 +312,7 @@ class EnvvarProfile(collections.abc.Mapping):
             return None
         else:
             return self.__class__(
-                name=self._profile_parent_name, parent_name=None, is_live=self.profile_is_live
+                name=self._profile_parent_name, parent_name=None, profile_is_live=self.profile_is_live
             )
 
     def _get_prop(self, prop: typing.Union[str, EnvvarProfileProperty]) -> EnvvarProfileProperty:
