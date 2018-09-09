@@ -21,7 +21,7 @@ setup(
     maintainer_email='jazeps.basko@gmail.com',
     license='MIT',
     url='https://github.com/jbasko/wr-profiles',
-    description='Switch environment variable based profiles in Python with ease',
+    description='Load environment variable based profiles in Python 3.6+ with ease',
     long_description=read('docs/README.rst'),
     packages=['wr_profiles'],
     install_requires=[],

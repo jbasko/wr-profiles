@@ -452,7 +452,7 @@ def envvar_profile(
     profile_root: str,
     profile_properties: typing.Dict[str, typing.Optional[str]] = None,
     **profile_properties_as_kwargs,
-) -> typing.Type[EnvvarProfile]:
+) -> EnvvarProfile:
     """
     Creates an EnvvarProfile instance without the need for an explicit declaration of the envvar profile class.
     """
