@@ -1,4 +1,7 @@
 import collections.abc
+import contextlib
+import functools
+import operator
 import os
 import re
 import typing
@@ -385,6 +388,108 @@ class EnvvarProfile(collections.abc.Mapping):
             profile_name = self.profile_name
         self._active_profile_name = profile_name
 
+    def create_env(self, include_activation=True, **props) -> "Environment":
+        """
+        Create a custom dictionary of environment variables representing an environment
+        by passing values of properties as keyword arguments.
+
+        Values of properties not mentioned in the env will be taken from the
+        profile itself.
+
+        Property values that are None should be interpreted and will be interpreted in
+        Environment.applied as environment variables to be unset.
+
+        Calling this does NOT modify the profile or the environment variables.
+
+        TODO v5.x: Perhaps this can completely replace EnvvarProfile.to_envvars.
+        """
+        self: EnvvarProfile
+        props = dict(props)
+        env = Environment()
+
+        if include_activation:
+            env[self._active_profile_name_envvar] = self.profile_name
+
+        for k in self.profile_properties:
+            p = self._get_prop(k)
+            if k in props:
+                v = props.pop(k)
+                env[p.get_envvar(self)] = p.to_str(self, v)
+            else:
+                env[p.get_envvar(self)] = self._get_prop_value(p)
+
+        if props:
+            raise ValueError(f"Unexpected property names: {', '.join(str(k) for k in props.keys())}")
+
+        return env
+
+
+class Environment(dict):
+    """
+    An environment is a dictionary that can be "applied" to a context.
+    See apply().
+    """
+
+    @staticmethod
+    def _del_item(ctx, item):
+        if item in ctx:
+            del ctx[item]
+
+    @contextlib.contextmanager
+    def applied(
+        self,
+        context: typing.Any=None,
+        setenv: typing.Callable=operator.setitem,
+        delenv: typing.Callable=None,
+        getenv: typing.Callable=operator.getitem,
+    ):
+        """
+        Apply this environment to the context.
+
+        If no context is supplied, os.environ is used.
+
+        If you pass setenv= and delenv=, those will be used to apply the environment.
+        delenv must not fail for non-existent environment variables.
+
+        If context has a 'setenv' attribute, then we believe it's pytest's MonkeyPatch
+        and use it accordingly.
+        """
+        if context is None:
+            context = os.environ
+        if hasattr(context, "setenv"):
+            # context is probably pytest's MonkeyPatch
+            setenv = context.setenv
+            delenv = functools.partial(context.delenv, raising=False)
+            getenv = functools.partial(operator.getitem, os.environ)
+        elif delenv is None:
+            setenv = functools.partial(operator.setitem, context)
+            delenv = functools.partial(Environment._del_item, context)
+
+        # Retain previous values so we can reset the changes we did
+        previous_values = {}
+
+        # Apply the values
+        for k, v in self.items():
+            try:
+                previous_values[k] = getenv(k)
+            except KeyError:
+                previous_values[k] = None
+            if v is None:
+                delenv(k)
+            else:
+                setenv(k, v)
+
+        try:
+            yield self
+
+        finally:
+            # Set back the previous values
+            for k, v in previous_values.items():
+                if v is None:
+                    delenv(k)
+                else:
+                    setenv(k, v)
+
 
 def to_snake_case(camel_case: str) -> str:
     # https://stackoverflow.com/a/1176023/38611
@@ -392,7 +497,7 @@ def to_snake_case(camel_case: str) -> str:
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
-def envvar_profile_cls(profile_cls=None, **profile_cls_options):
+def envvar_profile_cls(profile_cls=None, **profile_cls_options) -> typing.Type[EnvvarProfile]:
     """
     A class decorator that makes the decorated class a sub-class of EnvvarProfile and transforms
     its type annotations into envvar profile properties.
@@ -440,7 +545,9 @@ def envvar_profile_cls(profile_cls=None, **profile_cls_options):
             bases.append(EnvvarProfile)
         bases.append(profile_cls)
 
-        return type(profile_cls.__name__, tuple(bases), dct)
+        cls = type(profile_cls.__name__, tuple(bases), dct)
+        cls.__qualname__ = profile_cls.__qualname__
+        return cls
 
     if profile_cls is None:
         return decorator

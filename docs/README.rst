@@ -16,7 +16,7 @@ You don't.
 
 But you could find it useful if you use environment variables as primary means of passing 
 configuration to your program, and you have scenarios when your program has to switch between sets of 
-environment variables (which we call *profiles*).
+environment variables.
 
 Supported Python Versions
 -------------------------
@@ -75,11 +75,21 @@ Installation
 
 If you decide to use this library, make sure you pin the version number in your requirements file.
 
-We are following interpretation of the semantic versioning schema:
+We are following interpretation of the semantic versioning schema. Example:
 
 * ``v2.x.a -> v2.x.b`` - bugfix or non-breaking change, safe to upgrade.
 * ``v2.x.* -> v3.y.*`` - potentially breaking changes, feature added, minimal changes to user code may be required
 * ``v2.* -> v3.*`` - complete changeover
+
+
+Changelog
+=========
+
+v4.1.0
+------
+
+* Added ``EnvvarProfile.create_env`` which creates an ``Environment`` which can be applied
+  as a context manager.
 
 
 User Guide
@@ -203,7 +213,7 @@ instantiated with no arguments:
 
     warehouse_profile = WarehouseProfile()
 
-Normally you'd only need a single instance of your profile class.
+Normally you'd only need a single instance of your profile class pointing to the active profile.
 
 
 Get Concrete Profile
@@ -308,3 +318,22 @@ Inspect Property
     assert isinstance(WarehouseProfile.username, EnvvarProfileProperty)
     assert WarehouseProfile.username.name == "username"
     assert WarehouseProfile.username.default == "default-username"
+
+
+Environment Objects
+^^^^^^^^^^^^^^^^^^^
+
+Starting from version 4.1 you can create an instance of ``Environment`` which can then be applied on ``os.environ``
+or pytest's ``monkeypatch`` fixture. ``Environment`` is a dictionary of environment variables that neet to
+be set or unset in order to apply the specified environment. The values are determined at environment
+creation time.
+
+.. code-block:: python
+
+    test_env = warehouse_profile.create_env(username='test', password=None)
+    with test_env.applied():
+        assert warehouse_profile.username == 'test'
+        assert os.environ['WAREHOUSE_USERNAME'] == 'test'
+
+        assert warehouse_profile.password is None
+        assert 'WAREHOUSE_PASSWORD' not in os.environ
