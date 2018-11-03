@@ -337,3 +337,29 @@ creation time.
 
         assert warehouse_profile.password is None
         assert 'WAREHOUSE_PASSWORD' not in os.environ
+
+
+Config Object that Delegates to Profile
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Environment variables are not necessarily the only source of configuration.
+In a non-trivial application you probably won't be consulting the profile object from your application code
+directly. Instead, you'll have a config object which will consult different sources including the
+environment variable profile.
+It is very likely that the properties defined in your profile class will
+be a subset of those exposed by the config object. If you don't want to repeat yourself, you can have your
+config class extend the profile class and have the config class delegate all the attributes to the profile
+class except for those implemented in the config class.
+
+.. code-block:: python
+
+    profile = WarehouseProfile()
+
+    class WarehouseConfig(WarehouseProfile):
+        @property
+        def profile_delegate(self):
+            return profile
+
+        @property
+        def username(self):
+            return profile.username or "anonymous"

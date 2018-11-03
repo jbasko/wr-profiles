@@ -10,4 +10,4 @@ coverage
 flake8
 isort
 pytest
-pytest-random-order
+pytest-random-order>=1.0.0
