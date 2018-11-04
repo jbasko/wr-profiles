@@ -5,18 +5,14 @@ wr-profiles
 Introduction
 ============
 
-*wr-* in the package name stands for *Wheel Reinvented*. Just like all other packages whose name starts with
-*wr-*, the meaning of this library (as in *meaning of life*) lies in its existence and evolution 
-and not in any external application of it.
+**wr-profiles** allows declaring a profile -- a collection of key, value pairs backed by environment variables and accessing them
+through dot notation with auto-complete working in your IDE. You can also have multiple separate environments declared
+and switch between profiles by changing just one environment variable (just like you normally do when working with
+multiple AWS accounts if you have that background). And a little bit more.
 
-Why Do I Need This?
--------------------
-
-You don't.
-
-But you could find it useful if you use environment variables as primary means of passing 
-configuration to your program, and you have scenarios when your program has to switch between sets of 
-environment variables.
+    *wr-* in the package name stands for *Wheel Reinvented*. Just like all other packages whose name starts with
+    *wr-*, the meaning of this library (as in *meaning of life*) lies in its existence and evolution
+    and not in any external application of it.
 
 Supported Python Versions
 -------------------------
@@ -27,12 +23,9 @@ Supported Python Versions
 Example
 =======
 
-Here's an example of declaring a profile with three properties and using it to consult the values
-of these properties. More advanced examples are available in the user guide below.
+Declare the profile:
 
 .. code-block:: python
-
-    # profiles.py
 
     from wr_profiles import envvar_profile_cls
 
@@ -45,16 +38,23 @@ of these properties. More advanced examples are available in the user guide belo
     warehouse_profile = WarehouseProfile()
 
 
+Set up the environments:
+
 .. code-block:: bash
 
-    # Set up the environment
-
-    export WAREHOUSE_PROFILE=staging
     export WAREHOUSE_STAGING_PARENT_PROFILE="production"
     export WAREHOUSE_STAGING_PASSWORD="staging-password"
     export WAREHOUSE_PRODUCTION_USERNAME="production-username"
     export WAREHOUSE_PRODUCTION_PASSWORD="production-password"
 
+Select the active environment:
+
+.. code-block:: shell
+
+    export WAREHOUSE_PROFILE=staging
+
+
+Use the profile:
 
 .. code-block:: python
 
@@ -63,7 +63,6 @@ of these properties. More advanced examples are available in the user guide belo
     assert warehouse_profile.host == "localhost"
     assert warehouse_profile.username == "production-username"
     assert warehouse_profile.password == "staging-password"
-
 
 
 Installation
@@ -84,6 +83,11 @@ We are following interpretation of the semantic versioning schema. Example:
 
 Changelog
 =========
+
+v4.2.0
+------
+
+* Added ``profile_delegate`` feature.
 
 v4.1.0
 ------
