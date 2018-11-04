@@ -5,10 +5,11 @@ wr-profiles
 Introduction
 ============
 
-**wr-profiles** allows declaring a profile -- a collection of key, value pairs backed by environment variables and accessing them
-through dot notation with auto-complete working in your IDE. You can also have multiple separate environments declared
-and switch between profiles by changing just one environment variable (just like you normally do when working with
-multiple AWS accounts if you have that background). And a little bit more.
+**wr-profiles** allows declaring a profile -- a collection of key-value pairs -- backed by environment variables
+and accessing the profile contents through dot notation with auto-complete working in your IDE.
+You can also have multiple separate environments declared and switch between profiles by changing just one environment
+variable (just like you normally do when working with multiple AWS accounts if you have that background).
+wr-profiles are designed with testability in mind.
 
     *wr-* in the package name stands for *Wheel Reinvented*. Just like all other packages whose name starts with
     *wr-*, the meaning of this library (as in *meaning of life*) lies in its existence and evolution
