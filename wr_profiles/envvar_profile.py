@@ -195,6 +195,11 @@ class EnvvarProfile(collections.abc.Mapping):
     # shared loaders
     _profile_loaders: typing.Dict[str, ProfileLoader] = {}
 
+    # Do not initialise this here.
+    # If profile_delegate attribute is set, all attribute read access is delegated to
+    # the profile delegate.
+    profile_delegate: typing.Any
+
     def __init__(
         self,
         *,
@@ -245,6 +250,17 @@ class EnvvarProfile(collections.abc.Mapping):
         )
         instance._do_load()
         return instance
+
+    def __getattribute__(self, name):
+        """
+        All non-private attributes are delegated to profile_delegate (if it is set on class).
+        """
+        if name.startswith("_") or name in ("profile_delegate",):
+            return object.__getattribute__(self, name)
+        if hasattr(self.__class__, "profile_delegate"):
+            return getattr(self.profile_delegate, name)
+        else:
+            return object.__getattribute__(self, name)
 
     def __iter__(self) -> typing.Iterator[str]:
         return iter(self.profile_properties)
@@ -438,10 +454,10 @@ class Environment(dict):
     @contextlib.contextmanager
     def applied(
         self,
-        context: typing.Any=None,
-        setenv: typing.Callable=operator.setitem,
-        delenv: typing.Callable=None,
-        getenv: typing.Callable=operator.getitem,
+        context: typing.Any = None,
+        setenv: typing.Callable = operator.setitem,
+        delenv: typing.Callable = None,
+        getenv: typing.Callable = operator.getitem,
     ):
         """
         Apply this environment to the context.
