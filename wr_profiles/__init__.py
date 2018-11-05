@@ -1,4 +1,4 @@
-__version__ = "4.2.0"
+__version__ = "4.2.1"
 
 from .envvar_profile import Environment, EnvvarProfile, EnvvarProfileProperty, envvar_profile, envvar_profile_cls
 

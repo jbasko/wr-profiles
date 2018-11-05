@@ -257,6 +257,8 @@ class EnvvarProfile(collections.abc.Mapping):
         """
         if name.startswith("_") or name in ("profile_delegate",):
             return object.__getattribute__(self, name)
+        if name in self.__class__.__dict__:
+            return object.__getattribute__(self, name)
         if hasattr(self.__class__, "profile_delegate"):
             return getattr(self.profile_delegate, name)
         else:
