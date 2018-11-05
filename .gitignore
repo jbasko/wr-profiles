@@ -1,6 +1,7 @@
 *~
 .cache
-dist
+dist/
+build/
 .DS_Store
 *.egg-info
 .envrc
